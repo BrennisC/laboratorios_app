@@ -1,0 +1,4 @@
+User-agent: *
+Disallow: /debug.php
+Disallow: /backup/
+Disallow: /data/

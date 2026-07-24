@@ -1,0 +1,20 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: Arial, sans-serif; background: #eef7f1; color: #123026; }
+a { color: #047857; text-decoration: none; }
+.topbar { display: flex; justify-content: space-between; align-items: center; gap: 1rem; padding: 1rem 2rem; background: #064e3b; color: white; flex-wrap: wrap; }
+.topbar a { color: white; margin-right: .75rem; }
+.brand { font-weight: 700; font-size: 1.25rem; }
+.container { max-width: 1100px; margin: 2rem auto; padding: 0 1rem; }
+.grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 1rem; }
+.card, .panel { background: white; border-radius: 12px; padding: 1rem; box-shadow: 0 8px 20px rgba(6, 78, 59, .08); }
+.card img { width: 100%; border-radius: 8px; }
+input, textarea { width: 100%; padding: .65rem; margin: .35rem 0 1rem; border: 1px solid #a7f3d0; border-radius: 8px; }
+button, .button { display: inline-block; background: #059669; color: white; border: 0; border-radius: 8px; padding: .65rem 1rem; cursor: pointer; }
+.danger { background: #b91c1c; }
+.notice { background: #ecfdf5; border-left: 4px solid #10b981; padding: 1rem; margin-bottom: 1rem; }
+.error { background: #fef2f2; border-left: 4px solid #ef4444; padding: 1rem; margin-bottom: 1rem; }
+.muted { color: #64748b; }
+table { width: 100%; border-collapse: collapse; background: white; }
+th, td { border-bottom: 1px solid #d1fae5; padding: .75rem; text-align: left; }
+.footer { text-align: center; color: #64748b; padding: 2rem; }
+@media (max-width: 700px) { .topbar { align-items: flex-start; } .topbar nav a { display: inline-block; margin-bottom: .5rem; } }
