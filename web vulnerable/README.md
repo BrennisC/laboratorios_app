@@ -124,7 +124,7 @@ Flag stages:
 | A9 Known Vulnerable Components | Old jQuery included from CDN | `includes/header.php` |
 | A10 Insufficient Logging & Monitoring | Security events are not logged | `login.php`, `admin.php`, `checkout.php` |
 | Command Injection/RCE | User-controlled command execution | `rce.php` |
-| Unrestricted File Upload | No extension, MIME type or content validation | `upload.php`, `uploads/` |
+| Unrestricted File Upload | No extension, MIME type or content validation | `admin.php`, `uploads/` |
 
 ## Suggested Exercises
 

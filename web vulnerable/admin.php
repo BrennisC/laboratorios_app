@@ -2,6 +2,7 @@
 require_once __DIR__ . '/db.php';
 
 $message = '';
+$uploadedPath = '';
 
 // A5: broken access control. Role can be supplied by query string.
 $role = $_GET['role'] ?? current_user_role();
@@ -10,7 +11,23 @@ if ($role !== 'admin') {
     $message = 'You are not admin, but try adding ?role=admin to the URL.';
 }
 
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
+    if (!is_dir(UPLOAD_DIR)) {
+        @mkdir(UPLOAD_DIR, 0777, true);
+    }
+
+    $originalName = $_FILES['file']['name'] ?? '';
+    $targetName = basename($originalName);
+    $targetPath = UPLOAD_DIR . '/' . $targetName;
+
+    // A5/A6: unrestricted upload into a web-accessible directory.
+    if ($targetName !== '' && move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
+        $uploadedPath = '/uploads/' . $targetName;
+        $message = 'File uploaded successfully.';
+    } else {
+        $message = 'Upload failed.';
+    }
+} elseif ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'] ?? '';
     $description = $_POST['description'] ?? '';
     $price = $_POST['price'] ?? '0';
@@ -46,6 +63,18 @@ include __DIR__ . '/includes/header.php';
         <button>Create</button>
     </form>
 </section>
+<section class="panel" id="upload">
+    <h2>Insecure File Upload</h2>
+    <p>This intentionally accepts files without extension, MIME type, content or storage-location validation.</p>
+    <form method="post" enctype="multipart/form-data">
+        <label>File</label>
+        <input name="file" type="file" required>
+        <button>Upload</button>
+    </form>
+    <?php if ($uploadedPath): ?>
+        <p>Uploaded file: <a href="<?= $uploadedPath ?>"><?= $uploadedPath ?></a></p>
+    <?php endif; ?>
+</section>
 <section class="panel">
     <h2>Products</h2>
     <table>
@@ -60,5 +89,5 @@ include __DIR__ . '/includes/header.php';
         <?php endforeach; ?>
     </table>
 </section>
-<p><a class="button" href="/import_xml.php">XML Importer</a> <a class="button" href="/upload.php">Upload</a> <a class="button" href="/deserialize.php">Deserialize Tool</a></p>
+<p><a class="button" href="/import_xml.php">XML Importer</a> <a class="button" href="/admin.php?role=admin#upload">Upload</a> <a class="button" href="/deserialize.php">Deserialize Tool</a></p>
 <?php include __DIR__ . '/includes/footer.php'; ?>
