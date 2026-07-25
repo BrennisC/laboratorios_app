@@ -1,0 +1,432 @@
+\documentclass[12pt,a4paper]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage[spanish]{babel}
+\usepackage{geometry}
+\usepackage{array}
+\usepackage{longtable}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{enumitem}
+
+\geometry{margin=2.5cm}
+\hypersetup{
+    colorlinks=true,
+    linkcolor=blue,
+    urlcolor=blue
+}
+
+\lstset{
+    basicstyle=\ttfamily\small,
+    breaklines=true,
+    frame=single,
+    columns=fullflexible,
+    backgroundcolor=\color{gray!8}
+}
+
+\title{Documentación Técnica Comparativa: Web Vulnerable y Web Segura}
+\author{Laboratorio de Seguridad Web}
+\date{\today}
+
+\begin{document}
+
+\maketitle
+\tableofcontents
+\newpage
+
+\section{Objetivo del documento}
+
+El objetivo de esta documentación es explicar, paso a paso, las diferencias técnicas entre dos aplicaciones PHP del mismo laboratorio: \textbf{web vulnerable} y \textbf{web seguro}. La primera aplicación fue construida intencionalmente con fallas de seguridad basadas en OWASP Top 10 2017. La segunda conserva la misma idea funcional de tienda de productos, pero corrige esas debilidades mediante controles defensivos.
+
+Este documento no se limita a decir que una aplicación es vulnerable y la otra segura. Explica qué problema existía, por qué era peligroso y qué mejora concreta se aplicó en la versión segura.
+
+\section{Descripción general del proyecto}
+
+El proyecto contiene dos implementaciones separadas:
+
+\begin{itemize}[leftmargin=*]
+    \item \texttt{web vulnerable}: aplicación llamada \textit{VulnShop}, diseñada como laboratorio de práctica ofensiva. Incluye fallas como inyección SQL, autenticación débil, exposición de datos sensibles, XXE, control de acceso roto, XSS, deserialización insegura y falta de monitoreo.
+    \item \texttt{web seguro}: aplicación llamada \textit{SecureShop}, diseñada como contraparte segura. Implementa consultas preparadas, validación de entradas, hash de contraseñas, protección CSRF, control de roles, codificación de salida, cabeceras HTTP de seguridad y registro de eventos.
+\end{itemize}
+
+\section{Entorno de ejecución}
+
+Ambas aplicaciones usan PHP 8 y MySQL o MariaDB. Sin embargo, cada una usa una base de datos distinta para mantener separados los escenarios de prueba.
+
+\begin{longtable}{|p{4cm}|p{5cm}|p{5cm}|}
+\hline
+\textbf{Elemento} & \textbf{Web vulnerable} & \textbf{Web segura} \\
+\hline
+Nombre de aplicación & VulnShop & SecureShop \\
+\hline
+Base de datos & \texttt{vulnshop\_db} & \texttt{secureshop\_db} \\
+\hline
+Usuario de base de datos & \texttt{vulnshop\_user} & \texttt{secureshop\_user} \\
+\hline
+Puerto sugerido & \texttt{127.0.0.1:8000} & \texttt{127.0.0.1:8080} \\
+\hline
+Propósito & Laboratorio vulnerable & Versión defensiva \\
+\hline
+\end{longtable}
+
+\section{Comparación general de seguridad}
+
+\begin{longtable}{|p{3.5cm}|p{5cm}|p{5cm}|}
+\hline
+\textbf{Área} & \textbf{Problema en web vulnerable} & \textbf{Mejora en web segura} \\
+\hline
+Consultas SQL & Se concatena entrada del usuario directamente en las consultas. & Se usan consultas preparadas con parámetros. \\
+\hline
+Autenticación & Las contraseñas se guardan y comparan en texto plano. & Se usa \texttt{password\_hash()} y \texttt{password\_verify()}. \\
+\hline
+Sesiones & No se regenera el identificador de sesión al iniciar sesión. & Se ejecuta \texttt{session\_regenerate\_id(true)} después del login exitoso. \\
+\hline
+Control de acceso & El rol puede manipularse desde la URL. & El rol se valida desde la sesión del servidor. \\
+\hline
+Datos sensibles & Se muestran contraseñas y tarjetas completas. & Se ocultan contraseñas y se enmascaran tarjetas. \\
+\hline
+XSS & Se imprime contenido sin escapar. & Se centraliza la codificación con la función \texttt{e()}. \\
+\hline
+CSRF & Los formularios críticos no tienen token CSRF. & Los formularios usan \texttt{csrf\_field()} y \texttt{verify\_csrf()}. \\
+\hline
+XXE & El parser XML permite entidades externas. & Se bloquea expansión de entidades y acceso de red con \texttt{LIBXML\_NONET}. \\
+\hline
+Deserialización & Se ejecuta \texttt{unserialize()} sobre entrada del usuario. & Se reemplaza por JSON con campos permitidos. \\
+\hline
+Monitoreo & No se registran eventos de seguridad. & Se registran eventos en \texttt{security\_logs}. \\
+\hline
+\end{longtable}
+
+\section{Análisis paso a paso de vulnerabilidades y mejoras}
+
+\subsection{Paso 1: Inyección SQL en el inicio de sesión}
+
+\subsubsection*{Problema en la web vulnerable}
+
+En \texttt{web vulnerable/login.php}, el correo y la contraseña ingresados por el usuario se insertan directamente dentro de la consulta SQL:
+
+\begin{lstlisting}[language=PHP]
+$sql = "SELECT * FROM users WHERE email = '$email' AND password = '$password'";
+$user = db()->query($sql)->fetch(PDO::FETCH_ASSOC);
+\end{lstlisting}
+
+Esto permite que un atacante modifique la lógica de la consulta. Por ejemplo, si el campo de correo recibe una condición SQL maliciosa, la base de datos puede interpretar esa entrada como parte del comando y no como un simple dato.
+
+\subsubsection*{Mejora en la web segura}
+
+En \texttt{web seguro/login.php}, la consulta se realiza con \texttt{prepare()} y parámetros:
+
+\begin{lstlisting}[language=PHP]
+$stmt = db()->prepare('SELECT * FROM users WHERE email = ? LIMIT 1');
+$stmt->execute([$email]);
+\end{lstlisting}
+
+Con este cambio, la entrada del usuario se trata como dato y no como código SQL. Esta es una mejora fundamental porque separa la estructura de la consulta de los valores ingresados.
+
+\subsection{Paso 2: Autenticación débil y contraseñas en texto plano}
+
+\subsubsection*{Problema en la web vulnerable}
+
+En la versión vulnerable, la tabla \texttt{users} guarda la contraseña directamente en una columna llamada \texttt{password}. Además, el login compara el valor ingresado con el texto almacenado.
+
+\begin{lstlisting}[language=SQL]
+('Admin User', 'admin@example.com', 'admin123', 'admin', ...)
+\end{lstlisting}
+
+Esto es peligroso porque si la base de datos se filtra, las contraseñas quedan expuestas inmediatamente.
+
+\subsubsection*{Mejora en la web segura}
+
+La versión segura usa una columna \texttt{password\_hash} y genera hashes con \texttt{password\_hash()}:
+
+\begin{lstlisting}[language=PHP]
+password_hash($password, PASSWORD_DEFAULT)
+\end{lstlisting}
+
+Luego valida el login con:
+
+\begin{lstlisting}[language=PHP]
+password_verify($password, $user['password_hash'])
+\end{lstlisting}
+
+Esta mejora impide que una filtración de la base de datos revele directamente las contraseñas reales.
+
+\subsection{Paso 3: Protección de sesión}
+
+\subsubsection*{Problema en la web vulnerable}
+
+Después del login, la versión vulnerable asigna datos a la sesión, pero no regenera el identificador de sesión:
+
+\begin{lstlisting}[language=PHP]
+$_SESSION['user_id'] = $user['id'];
+$_SESSION['role'] = $user['role'];
+\end{lstlisting}
+
+Esto deja abierta la posibilidad de ataques de fijación de sesión si un atacante logra imponer o conocer un identificador anterior.
+
+\subsubsection*{Mejora en la web segura}
+
+La versión segura regenera la sesión después del login exitoso:
+
+\begin{lstlisting}[language=PHP]
+session_regenerate_id(true);
+\end{lstlisting}
+
+También configura la cookie de sesión con \texttt{httponly} y \texttt{samesite=Lax} en \texttt{web seguro/config.php}. Esto reduce el riesgo de robo o abuso de la cookie desde JavaScript o desde solicitudes externas.
+
+\subsection{Paso 4: IDOR y exposición de perfiles ajenos}
+
+\subsubsection*{Problema en la web vulnerable}
+
+En \texttt{web vulnerable/profile.php}, el identificador del usuario puede venir desde la URL:
+
+\begin{lstlisting}[language=PHP]
+$id = $_GET['id'] ?? current_user_id();
+$user = db()->query("SELECT * FROM users WHERE id = $id")->fetch(PDO::FETCH_ASSOC);
+\end{lstlisting}
+
+Esto produce una vulnerabilidad IDOR, porque un usuario autenticado puede cambiar el parámetro \texttt{id} y consultar el perfil de otra persona. Además, la página muestra contraseña, rol, tarjeta completa y dirección.
+
+\subsubsection*{Mejora en la web segura}
+
+En \texttt{web seguro/profile.php}, el perfil siempre se obtiene usando el usuario autenticado en sesión:
+
+\begin{lstlisting}[language=PHP]
+$stmt = db()->prepare('SELECT id, name, email, role, credit_card_last4, address FROM users WHERE id = ?');
+$stmt->execute([current_user_id()]);
+\end{lstlisting}
+
+La mejora elimina la dependencia del parámetro \texttt{id}. Además, no se muestra la contraseña y la tarjeta se presenta enmascarada.
+
+\subsection{Paso 5: Control de acceso roto en el panel administrativo}
+
+\subsubsection*{Problema en la web vulnerable}
+
+En \texttt{web vulnerable/admin.php}, el rol puede venir desde el parámetro \texttt{role} de la URL:
+
+\begin{lstlisting}[language=PHP]
+$role = $_GET['role'] ?? current_user_role();
+\end{lstlisting}
+
+Esto significa que un usuario puede intentar acceder como administrador agregando \texttt{?role=admin}. El problema de fondo es que la aplicación confía en un dato controlado por el cliente.
+
+\subsubsection*{Mejora en la web segura}
+
+En \texttt{web seguro/admin.php}, el acceso se protege con:
+
+\begin{lstlisting}[language=PHP]
+require_admin();
+\end{lstlisting}
+
+La función \texttt{require\_admin()} valida el rol guardado en la sesión del servidor y devuelve código \texttt{403 Forbidden} si el usuario no es administrador. También registra el intento con \texttt{log\_security\_event()}.
+
+\subsection{Paso 6: Cross-Site Scripting en búsquedas y productos}
+
+\subsubsection*{Problema en la web vulnerable}
+
+En \texttt{web vulnerable/search.php}, la búsqueda se imprime directamente en el HTML:
+
+\begin{lstlisting}[language=PHP]
+<p>Results for: <?= $q ?></p>
+\end{lstlisting}
+
+También se imprimen nombres y descripciones de productos sin codificación. Si un atacante logra insertar JavaScript, el navegador lo puede ejecutar.
+
+\subsubsection*{Mejora en la web segura}
+
+La versión segura define una función central para escapar salidas HTML:
+
+\begin{lstlisting}[language=PHP]
+function e($value)
+{
+    return htmlspecialchars((string) $value, ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8');
+}
+\end{lstlisting}
+
+Luego imprime datos con \texttt{e()}:
+
+\begin{lstlisting}[language=PHP]
+<p>Results for: <?= e($q) ?></p>
+\end{lstlisting}
+
+Esta mejora evita que el navegador interprete contenido del usuario como código HTML o JavaScript.
+
+\subsection{Paso 7: Falta de protección CSRF}
+
+\subsubsection*{Problema en la web vulnerable}
+
+Los formularios sensibles de la versión vulnerable, como login, creación de productos o importación XML, no validan un token CSRF. Esto permite que otro sitio intente enviar solicitudes en nombre del usuario si este tiene una sesión activa.
+
+\subsubsection*{Mejora en la web segura}
+
+La versión segura genera y valida tokens CSRF mediante \texttt{csrf\_field()} y \texttt{verify\_csrf()}:
+
+\begin{lstlisting}[language=PHP]
+<?= csrf_field() ?>
+verify_csrf();
+\end{lstlisting}
+
+El token se guarda en sesión y se compara con \texttt{hash\_equals()}, evitando comparaciones inseguras.
+
+\subsection{Paso 8: XXE en importación XML}
+
+\subsubsection*{Problema en la web vulnerable}
+
+En \texttt{web vulnerable/import\_xml.php}, el parser XML permite cargar DTD y expandir entidades externas:
+
+\begin{lstlisting}[language=PHP]
+$dom->loadXML($xmlText, LIBXML_NOENT | LIBXML_DTDLOAD);
+\end{lstlisting}
+
+Esto permite ataques XXE. Un atacante podría intentar leer archivos locales del servidor usando entidades externas.
+
+\subsubsection*{Mejora en la web segura}
+
+En \texttt{web seguro/import\_xml.php}, la carga XML usa banderas más restrictivas:
+
+\begin{lstlisting}[language=PHP]
+$loaded = $dom->loadXML($xmlText, LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING);
+\end{lstlisting}
+
+Además, el importador queda restringido a usuarios administradores y protegido con CSRF. La mejora reduce el riesgo de lectura de archivos locales o solicitudes externas desde el parser XML.
+
+\subsection{Paso 9: Deserialización insegura}
+
+\subsubsection*{Problema en la web vulnerable}
+
+En \texttt{web vulnerable/deserialize.php}, la aplicación ejecuta \texttt{unserialize()} sobre datos enviados por el usuario:
+
+\begin{lstlisting}[language=PHP]
+$result = print_r(unserialize($payload), true);
+\end{lstlisting}
+
+El archivo también define una clase \texttt{FileWriter} con un método \texttt{\_\_destruct()} que escribe archivos. Esto es riesgoso porque un atacante puede construir objetos serializados para provocar efectos secundarios.
+
+\subsubsection*{Mejora en la web segura}
+
+La versión segura elimina el uso de \texttt{unserialize()} para entrada del usuario y usa JSON con una lista de campos permitidos en \texttt{web seguro/import\_json.php}:
+
+\begin{lstlisting}[language=PHP]
+$data = json_decode($payload, true, 512, JSON_THROW_ON_ERROR);
+$allowed = [
+    'name' => isset($data['name']) ? (string) $data['name'] : '',
+    'price' => isset($data['price']) ? (float) $data['price'] : 0,
+];
+\end{lstlisting}
+
+La mejora consiste en aceptar datos simples y conocidos, no objetos PHP con comportamiento ejecutable.
+
+\subsection{Paso 10: Configuración insegura y exposición de información}
+
+\subsubsection*{Problema en la web vulnerable}
+
+En \texttt{web vulnerable/config.php}, la aplicación muestra errores y mantiene el modo debug activo:
+
+\begin{lstlisting}[language=PHP]
+ini_set('display_errors', '1');
+define('DEBUG_MODE', true);
+define('APP_SECRET', 'hardcoded-secret-key-123');
+\end{lstlisting}
+
+Además, existe una ruta \texttt{debug.php}, un archivo \texttt{robots.txt} y una copia \texttt{backup/users.sql.bak}, lo cual facilita la enumeración y exposición de datos durante el laboratorio.
+
+\subsubsection*{Mejora en la web segura}
+
+En \texttt{web seguro/config.php}, los errores no se muestran directamente al usuario:
+
+\begin{lstlisting}[language=PHP]
+ini_set('display_errors', '0');
+\end{lstlisting}
+
+La versión segura también evita exponer una ruta de debug pública y agrega cabeceras HTTP defensivas desde \texttt{web seguro/includes/header.php}.
+
+\subsection{Paso 11: Componentes vulnerables y cabeceras de seguridad}
+
+\subsubsection*{Problema en la web vulnerable}
+
+La web vulnerable carga una versión antigua de jQuery desde CDN:
+
+\begin{lstlisting}[language=HTML]
+<script src="https://code.jquery.com/jquery-1.12.4.min.js"></script>
+\end{lstlisting}
+
+Usar dependencias antiguas aumenta el riesgo de vulnerabilidades conocidas. Además, la aplicación no define cabeceras de seguridad importantes.
+
+\subsubsection*{Mejora en la web segura}
+
+La web segura no carga esa dependencia antigua y define cabeceras como:
+
+\begin{lstlisting}[language=PHP]
+header('X-Frame-Options: DENY');
+header('X-Content-Type-Options: nosniff');
+header('Referrer-Policy: strict-origin-when-cross-origin');
+header("Content-Security-Policy: default-src 'self'; ...");
+\end{lstlisting}
+
+Estas cabeceras ayudan a reducir riesgos como clickjacking, interpretación incorrecta de tipos MIME y ejecución de recursos no autorizados.
+
+\subsection{Paso 12: Falta de registros y monitoreo}
+
+\subsubsection*{Problema en la web vulnerable}
+
+La web vulnerable no registra eventos importantes como intentos fallidos de login, acceso denegado o acciones administrativas. Esto dificulta detectar ataques o investigar incidentes.
+
+\subsubsection*{Mejora en la web segura}
+
+La web segura incorpora la función \texttt{log\_security\_event()}:
+
+\begin{lstlisting}[language=PHP]
+$stmt = db()->prepare('INSERT INTO security_logs (user_id, event_type, message, ip_address, created_at) VALUES (?, ?, ?, ?, NOW())');
+\end{lstlisting}
+
+También incluye \texttt{security\_logs.php}, una vista administrativa para revisar los últimos eventos. Esta mejora no evita todos los ataques, pero permite detectarlos y responder mejor.
+
+\section{Resumen de mejoras aplicadas}
+
+\begin{longtable}{|p{4cm}|p{10cm}|}
+\hline
+\textbf{Mejora} & \textbf{Impacto técnico} \\
+\hline
+Consultas preparadas & Evitan que la entrada del usuario modifique la consulta SQL. \\
+\hline
+Hash de contraseñas & Reduce el impacto de una filtración de base de datos. \\
+\hline
+Regeneración de sesión & Disminuye el riesgo de fijación de sesión. \\
+\hline
+Validación de roles en servidor & Impide que el usuario escale privilegios modificando la URL. \\
+\hline
+Codificación de salida & Mitiga XSS reflejado y almacenado. \\
+\hline
+Tokens CSRF & Evitan acciones no autorizadas enviadas desde otros sitios. \\
+\hline
+XML seguro & Reduce el riesgo de XXE y lectura de archivos locales. \\
+\hline
+JSON con allow-list & Reemplaza la deserialización insegura por datos simples y controlados. \\
+\hline
+Cabeceras HTTP de seguridad & Agregan defensa en profundidad a nivel de navegador. \\
+\hline
+Logs de seguridad & Permiten detectar intentos sospechosos y auditar acciones críticas. \\
+\hline
+\end{longtable}
+
+\section{Conclusiones}
+
+La diferencia principal entre ambas aplicaciones no está en la funcionalidad visible, sino en la forma en que procesan datos, autentican usuarios y toman decisiones de autorización. La web vulnerable confía demasiado en entradas controladas por el usuario, muestra información sensible y ejecuta operaciones peligrosas sin validación suficiente. La web segura corrige esos errores aplicando controles básicos pero esenciales.
+
+Las mejoras más importantes son el uso de consultas preparadas, hash de contraseñas, validación de sesión y rol en el servidor, codificación de salida, protección CSRF, configuración segura del parser XML, eliminación de deserialización insegura y registro de eventos de seguridad.
+
+Como aprendizaje central, una aplicación segura no se construye agregando una sola defensa. Se construye aplicando varias capas: validación de entrada, codificación de salida, autenticación sólida, autorización estricta, configuración segura y monitoreo. Cada capa reduce una parte del riesgo.
+
+\section{Recomendaciones finales}
+
+\begin{itemize}[leftmargin=*]
+    \item Mantener la web vulnerable solo en entornos locales de práctica y nunca publicarla en internet.
+    \item Usar la web segura como referencia para implementar defensas mínimas en aplicaciones PHP.
+    \item Revisar periódicamente dependencias, configuración del servidor y permisos de archivos.
+    \item Complementar estas defensas con pruebas automatizadas de seguridad y revisión de código.
+    \item No guardar secretos reales directamente en el código fuente; usar variables de entorno o gestores de secretos en entornos reales.
+\end{itemize}
+
+\end{document}
