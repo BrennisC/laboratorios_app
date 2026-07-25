@@ -14,7 +14,7 @@ SecureShop is the safe counterpart to `web vulnerable`. It implements the same b
 Default local lab values:
 
 - Database: `secureshop_db`
-- User: `secureshop_user`
+- User: `web_app`
 - Password: `secureshop_pass123`
 - Host: `127.0.0.1`
 - Port: `5432`

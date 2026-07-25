@@ -15,8 +15,8 @@ Do not deploy this application to the internet. It intentionally contains critic
 Default lab values used by the app:
 
 - Database: `vulnshop_db`
-- User: `vulnshop_user`
-- Password: `vulnshop_pass123`
+- User: `web_app`
+- Password: `secureshop_pass123`
 - Host: `127.0.0.1`
 - Port: `5432`
 
@@ -68,8 +68,8 @@ Manual PostgreSQL user/database values:
 
 ```sql
 CREATE DATABASE vulnshop_db;
-CREATE ROLE vulnshop_user LOGIN PASSWORD 'vulnshop_pass123';
-GRANT ALL PRIVILEGES ON DATABASE vulnshop_db TO vulnshop_user;
+CREATE ROLE web_app LOGIN PASSWORD 'secureshop_pass123';
+GRANT ALL PRIVILEGES ON DATABASE vulnshop_db TO web_app;
 ```
 
 The SQL script creates the tables and initial products. The app also checks missing seed data on first load.

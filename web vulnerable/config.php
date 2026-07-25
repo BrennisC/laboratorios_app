@@ -9,8 +9,8 @@ define('DEBUG_MODE', true);
 define('DB_HOST', '127.0.0.1');
 define('DB_PORT', '5432');
 define('DB_NAME', 'vulnshop_db');
-define('DB_USER', 'vulnshop_user');
-define('DB_PASS', 'vulnshop_pass123');
+define('DB_USER', 'web_app');
+define('DB_PASS', 'secureshop_pass123');
 define('UPLOAD_DIR', __DIR__ . '/uploads');
 define('APP_SECRET', 'hardcoded-secret-key-123');
 

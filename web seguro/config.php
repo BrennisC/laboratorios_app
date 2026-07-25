@@ -7,7 +7,7 @@ define('APP_ENV', 'local');
 define('DB_HOST', '127.0.0.1');
 define('DB_PORT', '5432');
 define('DB_NAME', 'secureshop_db');
-define('DB_USER', 'secureshop_user');
+define('DB_USER', 'web_app');
 define('DB_PASS', 'secureshop_pass123');
 
 session_name('SECURESHOPSESSID');
