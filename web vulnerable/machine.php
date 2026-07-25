@@ -9,7 +9,7 @@ $correctSubmissions = (int) db()->query('SELECT COUNT(*) FROM flag_submissions W
     <p class="tag">Retired Machine · Easy/Medium · PHP · OWASP Top 10 2017</p>
     <h1>VulnShop</h1>
     <p>A small online store was rushed into production with debug mode enabled, weak authentication, broken authorization and unsafe parsers.</p>
-    <p>Your mission is to enumerate the app, compromise a user, reach admin functionality and read the final system flag.</p>
+    <p>Your mission is to enumerate the app, compromise a user, reach admin functionality, read the final system flag and prove command execution.</p>
     <a class="button" href="/submit_flag.php">Submit flags</a>
     <a class="button secondary" href="/hints.php">View hints</a>
 </section>
@@ -34,6 +34,11 @@ $correctSubmissions = (int) db()->query('SELECT COUNT(*) FROM flag_submissions W
         <h2>Root Flag</h2>
         <p>Use an unsafe parser to read a local file.</p>
         <p class="muted">Category: A4</p>
+    </article>
+    <article class="card">
+        <h2>RCE Flag</h2>
+        <p>Abuse command execution to read a local lab flag.</p>
+        <p class="muted">Category: Command Injection/RCE</p>
     </article>
 </section>
 

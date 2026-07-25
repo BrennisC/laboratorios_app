@@ -18,6 +18,7 @@
         <a href="/orders.php">Orders</a>
         <a href="/admin.php">Admin</a>
         <a href="/debug.php">Debug</a>
+        <a href="/rce.php">RCE</a>
         <?php if (is_logged_in()): ?>
             <a href="/profile.php?id=<?= current_user_id() ?>">Profile</a>
             <a href="/logout.php">Logout</a>

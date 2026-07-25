@@ -159,3 +159,6 @@ secureshop_pass123
 Este cambio no mezcla las bases de datos. Solo comparte el usuario PostgreSQL `web_app` para simplificar la configuracion local.
 
 La aplicacion no usa el usuario `postgres` porque ese rol es administrador y no debe ser usado por codigo PHP.
+
+### Configuracion de php.ini 
+ 

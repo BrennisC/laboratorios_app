@@ -106,6 +106,7 @@ Flag stages:
 - User flag: exposed through insecure direct object reference.
 - Admin flag: exposed through broken access control.
 - Root flag: stored in the application data directory and intended to be read through XXE.
+- RCE flag: stored in the application data directory and intended to be read through command execution.
 
 ## OWASP Top 10 2017 Map
 
@@ -121,6 +122,7 @@ Flag stages:
 | A8 Insecure Deserialization | User-controlled serialized object | `deserialize.php` |
 | A9 Known Vulnerable Components | Old jQuery included from CDN | `includes/header.php` |
 | A10 Insufficient Logging & Monitoring | Security events are not logged | `login.php`, `admin.php`, `checkout.php` |
+| Command Injection/RCE | User-controlled command execution | `rce.php` |
 
 ## Suggested Exercises
 
@@ -129,4 +131,5 @@ Flag stages:
 - Add a product review containing JavaScript.
 - Trigger XXE through the XML importer.
 - Abuse deserialization to write a file.
+- Execute operating system commands through the RCE lab page.
 - Access admin functionality without being an admin.

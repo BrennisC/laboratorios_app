@@ -67,6 +67,10 @@ function seed_database(PDO $pdo)
         @file_put_contents(__DIR__ . '/data/root_flag.txt', "VSHOP{root_xxe_file_read_2017}\n");
     }
 
+    if (!file_exists(__DIR__ . '/data/rce_flag.txt') && is_dir(__DIR__ . '/data')) {
+        @file_put_contents(__DIR__ . '/data/rce_flag.txt', "VSHOP{rce_command_execution_2017}\n");
+    }
+
     $userCount = (int) $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
     $productCount = (int) $pdo->query('SELECT COUNT(*) FROM products')->fetchColumn();
     $reviewCount = (int) $pdo->query('SELECT COUNT(*) FROM reviews')->fetchColumn();
@@ -105,5 +109,6 @@ function challenge_flags()
         'user' => 'VSHOP{user_idor_profile_2017}',
         'admin' => 'VSHOP{admin_broken_access_2017}',
         'root' => 'VSHOP{root_xxe_file_read_2017}',
+        'rce' => 'VSHOP{rce_command_execution_2017}',
     ];
 }
