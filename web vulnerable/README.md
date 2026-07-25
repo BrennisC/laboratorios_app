@@ -107,6 +107,7 @@ Flag stages:
 - Admin flag: exposed through broken access control.
 - Root flag: stored in the application data directory and intended to be read through XXE.
 - RCE flag: stored in the application data directory and intended to be read through command execution.
+- Upload shell: executable files can be uploaded into a web-accessible directory.
 
 ## OWASP Top 10 2017 Map
 
@@ -123,6 +124,7 @@ Flag stages:
 | A9 Known Vulnerable Components | Old jQuery included from CDN | `includes/header.php` |
 | A10 Insufficient Logging & Monitoring | Security events are not logged | `login.php`, `admin.php`, `checkout.php` |
 | Command Injection/RCE | User-controlled command execution | `rce.php` |
+| Unrestricted File Upload | No extension, MIME type or content validation | `upload.php`, `uploads/` |
 
 ## Suggested Exercises
 
@@ -132,4 +134,5 @@ Flag stages:
 - Trigger XXE through the XML importer.
 - Abuse deserialization to write a file.
 - Execute operating system commands through the RCE lab page.
+- Upload executable content through the insecure upload page.
 - Access admin functionality without being an admin.

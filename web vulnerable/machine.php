@@ -40,6 +40,11 @@ $correctSubmissions = (int) db()->query('SELECT COUNT(*) FROM flag_submissions W
         <p>Abuse command execution to read a local lab flag.</p>
         <p class="muted">Category: Command Injection/RCE</p>
     </article>
+    <article class="card">
+        <h2>Upload Shell</h2>
+        <p>Upload executable content into a web-accessible directory.</p>
+        <p class="muted">Category: Unrestricted File Upload</p>
+    </article>
 </section>
 
 <section class="panel">

@@ -25,4 +25,9 @@
     <details><summary>Hint 1</summary><p>Look for functionality that sends user input to the operating system.</p></details>
     <details><summary>Hint 2</summary><p>The command execution lab is intentionally restricted to localhost.</p></details>
 </section>
+<section class="panel">
+    <h2>Upload</h2>
+    <details><summary>Hint 1</summary><p>File uploads need extension, MIME type, content and storage-location controls.</p></details>
+    <details><summary>Hint 2</summary><p>Files stored inside the webroot can become directly reachable from the browser.</p></details>
+</section>
 <?php include __DIR__ . '/includes/footer.php'; ?>
