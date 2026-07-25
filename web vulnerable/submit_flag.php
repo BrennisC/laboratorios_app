@@ -6,10 +6,10 @@ $flags = challenge_flags();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $flag = trim($_POST['flag'] ?? '');
-    $correct = in_array($flag, $flags, true) ? 1 : 0;
+    $correct = in_array($flag, $flags, true) ? 'true' : 'false';
     $safeFlag = str_replace("'", "''", $flag);
 
-    db()->exec("INSERT INTO flag_submissions (flag, correct, submitted_at) VALUES ('$safeFlag', $correct, NOW())");
+    db()->exec("INSERT INTO flag_submissions (flag, correct, submitted_at) VALUES ('$safeFlag', $correct, CURRENT_TIMESTAMP)");
     $message = $correct ? 'Correct flag.' : 'Incorrect flag.';
 }
 

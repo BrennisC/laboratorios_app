@@ -10,7 +10,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = $_POST['password'] ?? '';
     $ip = $_SERVER['REMOTE_ADDR'] ?? 'unknown';
 
-    $attempts = db()->prepare('SELECT COUNT(*) FROM login_attempts WHERE email = ? AND ip_address = ? AND success = 0 AND created_at > DATE_SUB(NOW(), INTERVAL 10 MINUTE)');
+    $attempts = db()->prepare("SELECT COUNT(*) FROM login_attempts WHERE email = ? AND ip_address = ? AND success = false AND created_at > CURRENT_TIMESTAMP - INTERVAL '10 minutes'");
     $attempts->execute([$email ?: '', $ip]);
 
     if ((int) $attempts->fetchColumn() >= 5) {
@@ -26,12 +26,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $_SESSION['user_id'] = (int) $user['id'];
             $_SESSION['role'] = $user['role'];
             $_SESSION['name'] = $user['name'];
-            db()->prepare('INSERT INTO login_attempts (email, ip_address, success, created_at) VALUES (?, ?, 1, NOW())')->execute([$email, $ip]);
+            db()->prepare('INSERT INTO login_attempts (email, ip_address, success, created_at) VALUES (?, ?, true, CURRENT_TIMESTAMP)')->execute([$email, $ip]);
             log_security_event('login_success', 'User logged in');
             redirect('/index.php');
         }
 
-        db()->prepare('INSERT INTO login_attempts (email, ip_address, success, created_at) VALUES (?, ?, 0, NOW())')->execute([$email, $ip]);
+        db()->prepare('INSERT INTO login_attempts (email, ip_address, success, created_at) VALUES (?, ?, false, CURRENT_TIMESTAMP)')->execute([$email, $ip]);
         log_security_event('login_failed', 'Failed login for ' . $email);
         $error = 'Invalid credentials';
     } else {

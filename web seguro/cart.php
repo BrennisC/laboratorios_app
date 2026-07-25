@@ -7,7 +7,7 @@ $action = $_GET['action'] ?? '';
 $id = int_param('id', 0);
 
 if ($action === 'add' && $id > 0) {
-    $stmt = db()->prepare('SELECT id FROM products WHERE id = ? AND active = 1');
+    $stmt = db()->prepare('SELECT id FROM products WHERE id = ? AND active = true');
     $stmt->execute([$id]);
     if ($stmt->fetch()) {
         $_SESSION['cart'][$id] = ($_SESSION['cart'][$id] ?? 0) + 1;
@@ -23,7 +23,7 @@ if ($action === 'clear') {
 $items = [];
 $total = 0;
 foreach ($_SESSION['cart'] as $productId => $quantity) {
-    $stmt = db()->prepare('SELECT * FROM products WHERE id = ? AND active = 1');
+    $stmt = db()->prepare('SELECT * FROM products WHERE id = ? AND active = true');
     $stmt->execute([(int) $productId]);
     $product = $stmt->fetch();
     if ($product) {

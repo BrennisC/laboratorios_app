@@ -9,12 +9,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     verify_csrf();
     $comment = trim($_POST['comment'] ?? '');
     if ($comment !== '' && strlen($comment) <= 1000) {
-        $stmt = db()->prepare('INSERT INTO reviews (product_id, user_id, comment, created_at) VALUES (?, ?, ?, NOW())');
+        $stmt = db()->prepare('INSERT INTO reviews (product_id, user_id, comment, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP)');
         $stmt->execute([$id, current_user_id(), $comment]);
     }
 }
 
-$stmt = db()->prepare('SELECT * FROM products WHERE id = ? AND active = 1');
+$stmt = db()->prepare('SELECT * FROM products WHERE id = ? AND active = true');
 $stmt->execute([$id]);
 $product = $stmt->fetch();
 

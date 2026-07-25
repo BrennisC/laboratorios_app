@@ -82,7 +82,7 @@ function log_security_event($type, $message)
 {
     try {
         require_once __DIR__ . '/db.php';
-        $stmt = db()->prepare('INSERT INTO security_logs (user_id, event_type, message, ip_address, created_at) VALUES (?, ?, ?, ?, NOW())');
+        $stmt = db()->prepare('INSERT INTO security_logs (user_id, event_type, message, ip_address, created_at) VALUES (?, ?, ?, ?, CURRENT_TIMESTAMP)');
         $stmt->execute([current_user_id(), $type, $message, $_SERVER['REMOTE_ADDR'] ?? 'unknown']);
     } catch (Throwable $e) {
         error_log('Security log failed: ' . $e->getMessage());

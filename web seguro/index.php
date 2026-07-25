@@ -2,7 +2,7 @@
 require_once __DIR__ . '/lib/db.php';
 include __DIR__ . '/includes/header.php';
 
-$products = db()->query('SELECT * FROM products WHERE active = 1 ORDER BY id')->fetchAll();
+$products = db()->query('SELECT * FROM products WHERE active = true ORDER BY id')->fetchAll();
 ?>
 <section class="notice">
     <strong>Secure version:</strong> this app demonstrates the defenses missing in the vulnerable lab.

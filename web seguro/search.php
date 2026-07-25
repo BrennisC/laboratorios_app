@@ -6,7 +6,7 @@ $q = trim($_GET['q'] ?? '');
 $results = [];
 
 if ($q !== '') {
-    $stmt = db()->prepare('SELECT * FROM products WHERE active = 1 AND (name LIKE ? OR description LIKE ?)');
+    $stmt = db()->prepare('SELECT * FROM products WHERE active = true AND (name LIKE ? OR description LIKE ?)');
     $term = '%' . $q . '%';
     $stmt->execute([$term, $term]);
     $results = $stmt->fetchAll();

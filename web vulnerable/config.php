@@ -7,7 +7,7 @@ define('APP_NAME', 'VulnShop');
 define('APP_ENV', 'development');
 define('DEBUG_MODE', true);
 define('DB_HOST', '127.0.0.1');
-define('DB_PORT', '3306');
+define('DB_PORT', '5432');
 define('DB_NAME', 'vulnshop_db');
 define('DB_USER', 'vulnshop_user');
 define('DB_PASS', 'vulnshop_pass123');

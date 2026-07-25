@@ -2,7 +2,7 @@
 require_once __DIR__ . '/db.php';
 include __DIR__ . '/includes/header.php';
 
-$products = db()->query('SELECT * FROM products WHERE active = 1')->fetchAll(PDO::FETCH_ASSOC);
+$products = db()->query('SELECT * FROM products WHERE active = true')->fetchAll(PDO::FETCH_ASSOC);
 ?>
 <section class="notice">
     <strong>Training warning:</strong> this store is intentionally vulnerable. Use it only on your local machine.

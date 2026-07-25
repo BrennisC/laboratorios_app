@@ -7,7 +7,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $name = $_POST['name'] ?? 'Anonymous';
     $comment = $_POST['comment'] ?? '';
     // A1 and A7: SQL Injection and stored XSS.
-    db()->exec("INSERT INTO reviews (product_id, user_name, comment, created_at) VALUES ($id, '$name', '$comment', NOW())");
+    db()->exec("INSERT INTO reviews (product_id, user_name, comment, created_at) VALUES ($id, '$name', '$comment', CURRENT_TIMESTAMP)");
 }
 
 // A1: SQL Injection in numeric id.

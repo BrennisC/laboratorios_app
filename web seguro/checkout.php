@@ -10,7 +10,7 @@ function cart_items_and_total()
     $items = [];
     $total = 0;
     foreach ($_SESSION['cart'] ?? [] as $productId => $quantity) {
-        $stmt = db()->prepare('SELECT * FROM products WHERE id = ? AND active = 1');
+        $stmt = db()->prepare('SELECT * FROM products WHERE id = ? AND active = true');
         $stmt->execute([(int) $productId]);
         $product = $stmt->fetch();
         if ($product) {
@@ -29,9 +29,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $address = trim($_POST['address'] ?? '');
     if ($items && $address !== '') {
         db()->beginTransaction();
-        $stmt = db()->prepare('INSERT INTO orders (user_id, total, address, created_at) VALUES (?, ?, ?, NOW())');
+        $stmt = db()->prepare('INSERT INTO orders (user_id, total, address, created_at) VALUES (?, ?, ?, CURRENT_TIMESTAMP) RETURNING id');
         $stmt->execute([current_user_id(), $total, $address]);
-        $orderId = db()->lastInsertId();
+        $orderId = $stmt->fetchColumn();
         $itemStmt = db()->prepare('INSERT INTO order_items (order_id, product_id, price, quantity) VALUES (?, ?, ?, ?)');
         foreach ($items as $item) {
             $itemStmt->execute([$orderId, $item['id'], $item['price'], $item['quantity']]);

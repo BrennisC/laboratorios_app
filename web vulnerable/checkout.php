@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $total = $_POST['total'] ?? '0';
 
     // A5: client controls user_id and total. A1: raw SQL concatenation.
-    db()->exec("INSERT INTO orders (user_id, total, address, created_at) VALUES ($userId, $total, '$address', NOW())");
+    db()->exec("INSERT INTO orders (user_id, total, address, created_at) VALUES ($userId, $total, '$address', CURRENT_TIMESTAMP)");
     $_SESSION['cart'] = [];
     $message = 'Order created';
 }

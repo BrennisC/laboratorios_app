@@ -17,7 +17,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $image = $_POST['image'] ?? '';
 
     // A1 and A7: SQL injection and stored XSS in product fields.
-    db()->exec("INSERT INTO products (name, description, price, image, active) VALUES ('$name', '$description', $price, '$image', 1)");
+    db()->exec("INSERT INTO products (name, description, price, image, active) VALUES ('$name', '$description', $price, '$image', true)");
     $message = 'Product created';
 }
 

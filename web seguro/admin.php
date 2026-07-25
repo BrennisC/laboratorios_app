@@ -13,7 +13,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $image = filter_input(INPUT_POST, 'image', FILTER_VALIDATE_URL);
 
     if ($name !== '' && $description !== '' && $price !== false && $price > 0 && $image) {
-        $stmt = db()->prepare('INSERT INTO products (name, description, price, image, active) VALUES (?, ?, ?, ?, 1)');
+        $stmt = db()->prepare('INSERT INTO products (name, description, price, image, active) VALUES (?, ?, ?, ?, true)');
         $stmt->execute([$name, $description, $price, $image]);
         log_security_event('admin_product_created', 'Admin created product');
         $message = 'Product created';

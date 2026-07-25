@@ -6,10 +6,10 @@ SecureShop is the safe counterpart to `web vulnerable`. It implements the same b
 
 - Ubuntu
 - PHP 8+
-- MySQL Server 8+ or MariaDB
-- PHP MySQL extension
+- PostgreSQL 14+
+- PHP PostgreSQL extensions enabled: `pdo_pgsql` and `pgsql`
 
-## MySQL Configuration For Ubuntu
+## PostgreSQL Configuration
 
 Default local lab values:
 
@@ -17,21 +17,51 @@ Default local lab values:
 - User: `secureshop_user`
 - Password: `secureshop_pass123`
 - Host: `127.0.0.1`
-- Port: `3306`
+- Port: `5432`
 
-Install dependencies:
+### Ubuntu
 
 ```bash
 sudo apt update
-sudo apt install mysql-server php php-mysql
+sudo apt install postgresql php php-pgsql
 ```
 
 Create the database, user, tables and demo data:
 
 ```bash
 cd "web seguro"
-sudo mysql < mysql_setup.sql
+sudo -u postgres psql -f postgresql_setup.sql
 ```
+
+### Windows
+
+1. Install PostgreSQL from `https://www.postgresql.org/download/windows/`.
+2. Enable PostgreSQL extensions in `php.ini`:
+
+```ini
+extension=pdo_pgsql
+extension=pgsql
+```
+
+3. Restart IIS or your PHP process.
+4. Run the setup script from PowerShell:
+
+```powershell
+cd "C:\UNAS FIIS\PRACTICAS\webs_practica\web seguro"
+psql -U postgres -f .\postgresql_setup.sql
+```
+
+If `psql` is not recognized, add PostgreSQL's `bin` folder to `PATH`, for example `C:\Program Files\PostgreSQL\16\bin`.
+
+## IIS On Windows
+
+1. Install IIS with CGI support: `Windows Features > Internet Information Services > World Wide Web Services > Application Development Features > CGI`.
+2. Install PHP for Windows and configure IIS FastCGI to use `php-cgi.exe`.
+3. Enable `pdo_pgsql` and `pgsql` in `php.ini`.
+4. Create an IIS site pointing to this folder: `web seguro`.
+5. Set the site port, for example `8080`, and open `http://localhost:8080`.
+
+The IIS application pool identity needs read access to the project folder.
 
 Run locally:
 

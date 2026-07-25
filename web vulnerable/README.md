@@ -7,10 +7,10 @@ Do not deploy this application to the internet. It intentionally contains critic
 ## Requirements
 
 - PHP 8+
-- MySQL Server 8+ or MariaDB
-- PHP MySQL extension enabled
+- PostgreSQL 14+
+- PHP PostgreSQL extensions enabled: `pdo_pgsql` and `pgsql`
 
-## MySQL Configuration For Ubuntu
+## PostgreSQL Configuration
 
 Default lab values used by the app:
 
@@ -18,30 +18,58 @@ Default lab values used by the app:
 - User: `vulnshop_user`
 - Password: `vulnshop_pass123`
 - Host: `127.0.0.1`
-- Port: `3306`
+- Port: `5432`
 
-Install dependencies:
+### Ubuntu
 
 ```bash
 sudo apt update
-sudo apt install mysql-server php php-mysql
+sudo apt install postgresql php php-pgsql
 ```
 
 Create the database, user, tables and demo data:
 
 ```bash
-sudo mysql < mysql_setup.sql
+cd "web vulnerable"
+sudo -u postgres psql -f postgresql_setup.sql
 ```
 
-Or manually:
+### Windows
+
+1. Install PostgreSQL from `https://www.postgresql.org/download/windows/`.
+2. Enable PostgreSQL extensions in `php.ini`:
+
+```ini
+extension=pdo_pgsql
+extension=pgsql
+```
+
+3. Restart IIS or your PHP process.
+4. Run the setup script from PowerShell:
+
+```powershell
+cd "C:\UNAS FIIS\PRACTICAS\webs_practica\web vulnerable"
+psql -U postgres -f .\postgresql_setup.sql
+```
+
+If `psql` is not recognized, add PostgreSQL's `bin` folder to `PATH`, for example `C:\Program Files\PostgreSQL\16\bin`.
+
+## IIS On Windows
+
+1. Install IIS with CGI support: `Windows Features > Internet Information Services > World Wide Web Services > Application Development Features > CGI`.
+2. Install PHP for Windows and configure IIS FastCGI to use `php-cgi.exe`.
+3. Enable `pdo_pgsql` and `pgsql` in `php.ini`.
+4. Create an IIS site pointing to this folder: `web vulnerable`.
+5. Set the site port, for example `8000`, and open `http://localhost:8000`.
+
+The IIS application pool identity needs read access to the project folder and write access to `data` and `uploads` if those folders are used.
+
+Manual PostgreSQL user/database values:
 
 ```sql
-CREATE DATABASE IF NOT EXISTS vulnshop_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
-CREATE USER IF NOT EXISTS 'vulnshop_user'@'localhost' IDENTIFIED BY 'vulnshop_pass123';
-CREATE USER IF NOT EXISTS 'vulnshop_user'@'127.0.0.1' IDENTIFIED BY 'vulnshop_pass123';
-GRANT ALL PRIVILEGES ON vulnshop_db.* TO 'vulnshop_user'@'localhost';
-GRANT ALL PRIVILEGES ON vulnshop_db.* TO 'vulnshop_user'@'127.0.0.1';
-FLUSH PRIVILEGES;
+CREATE DATABASE vulnshop_db;
+CREATE ROLE vulnshop_user LOGIN PASSWORD 'vulnshop_pass123';
+GRANT ALL PRIVILEGES ON DATABASE vulnshop_db TO vulnshop_user;
 ```
 
 The SQL script creates the tables and initial products. The app also checks missing seed data on first load.
@@ -55,7 +83,7 @@ php -S 127.0.0.1:8000
 
 Open: `http://127.0.0.1:8000`
 
-The database must exist first. If you used `mysql_setup.sql`, tables and demo products are already loaded.
+The database must exist first. If you used `postgresql_setup.sql`, tables and demo products are already loaded.
 
 ## Demo Accounts
 

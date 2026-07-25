@@ -6,7 +6,7 @@ $results = [];
 
 if ($q !== '') {
     // A1: SQL Injection through LIKE clause.
-    $sql = "SELECT * FROM products WHERE active = 1 AND (name LIKE '%$q%' OR description LIKE '%$q%')";
+    $sql = "SELECT * FROM products WHERE active = true AND (name LIKE '%$q%' OR description LIKE '%$q%')";
     $results = db()->query($sql)->fetchAll(PDO::FETCH_ASSOC);
 }
 

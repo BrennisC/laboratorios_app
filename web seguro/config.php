@@ -5,7 +5,7 @@ error_reporting(E_ALL);
 define('APP_NAME', 'SecureShop');
 define('APP_ENV', 'local');
 define('DB_HOST', '127.0.0.1');
-define('DB_PORT', '3306');
+define('DB_PORT', '5432');
 define('DB_NAME', 'secureshop_db');
 define('DB_USER', 'secureshop_user');
 define('DB_PASS', 'secureshop_pass123');
