@@ -22,6 +22,8 @@ header("Content-Security-Policy: default-src 'self'; img-src 'self' https://pics
         <a href="/orders.php">Orders</a>
         <?php if (current_user_role() === 'admin'): ?>
             <a href="/admin.php">Admin</a>
+            <a href="/upload.php">Upload</a>
+            <a href="/rce.php">Safe RCE</a>
             <a href="/security_logs.php">Logs</a>
         <?php endif; ?>
         <?php if (is_logged_in()): ?>

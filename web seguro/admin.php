@@ -57,5 +57,5 @@ include __DIR__ . '/includes/header.php';
         <?php endforeach; ?>
     </table>
 </section>
-<p><a class="button" href="/import_xml.php">Safe XML Import</a> <a class="button" href="/import_json.php">Safe JSON Import</a></p>
+<p><a class="button" href="/import_xml.php">Safe XML Import</a> <a class="button" href="/import_json.php">Safe JSON Import</a> <a class="button" href="/upload.php">Safe Upload</a> <a class="button" href="/rce.php">Safe RCE Demo</a></p>
 <?php include __DIR__ . '/includes/footer.php'; ?>
