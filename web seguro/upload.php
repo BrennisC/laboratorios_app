@@ -5,10 +5,10 @@ require_admin();
 $message = '';
 $uploaded = null;
 $allowedTypes = [
-    'image/jpeg' => 'jpg',
-    'image/png' => 'png',
-    'application/pdf' => 'pdf',
-    'text/plain' => 'txt',
+    'image/jpeg' => ['extensions' => ['jpg', 'jpeg'], 'stored_extension' => 'jpg'],
+    'image/png' => ['extensions' => ['png'], 'stored_extension' => 'png'],
+    'application/pdf' => ['extensions' => ['pdf'], 'stored_extension' => 'pdf'],
+    'text/plain' => ['extensions' => ['txt'], 'stored_extension' => 'txt'],
 ];
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -26,9 +26,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $extension = strtolower(pathinfo($originalName, PATHINFO_EXTENSION));
         $tmpPath = (string) $file['tmp_name'];
         $mime = (new finfo(FILEINFO_MIME_TYPE))->file($tmpPath) ?: '';
-        $expectedExtension = $allowedTypes[$mime] ?? null;
+        $typeRule = $allowedTypes[$mime] ?? null;
 
-        if ($expectedExtension === null || $extension !== $expectedExtension) {
+        if ($typeRule === null || !in_array($extension, $typeRule['extensions'], true)) {
             log_security_event('upload_rejected', 'Rejected upload with invalid MIME type or extension');
             $message = 'Only JPG, PNG, PDF and TXT files are allowed.';
         } else {
@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 mkdir(UPLOAD_DIR, 0750, true);
             }
 
-            $storedName = bin2hex(random_bytes(16)) . '.' . $expectedExtension;
+            $storedName = bin2hex(random_bytes(16)) . '.' . $typeRule['stored_extension'];
             $targetPath = UPLOAD_DIR . '/' . $storedName;
 
             if (move_uploaded_file($tmpPath, $targetPath)) {
