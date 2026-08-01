@@ -10,6 +10,12 @@ include __DIR__ . '/includes/header.php';
         vulnerable
 
         me gusta contrar pero no llego hasta el 7
+
+
+        Credenciales de login
+        admin@example.com
+
+        contraseña:
     </p>
 </div>
 <?php include __DIR__ . '/includes/footer.php'; ?>
