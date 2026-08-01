@@ -16,7 +16,7 @@ $result = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $payload = $_POST['payload'] ?? '';
-    // A8: user-controlled serialized data.
+    // VULN: A08 - Software or Data Integrity Failures. User-controlled serialized data.
     $result = print_r(unserialize($payload), true);
 }
 

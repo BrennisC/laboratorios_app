@@ -5,7 +5,7 @@ if (!is_logged_in()) {
     redirect('/login.php');
 }
 
-// A5: user_id is trusted from request, exposing other users' orders.
+// VULN: A01 - Broken Access Control. user_id is trusted from request, exposing other users' orders.
 $userId = $_GET['user_id'] ?? current_user_id();
 $orders = db()->query("SELECT * FROM orders WHERE user_id = $userId ORDER BY id DESC")->fetchAll(PDO::FETCH_ASSOC);
 

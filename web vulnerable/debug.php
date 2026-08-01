@@ -12,7 +12,7 @@ include __DIR__ . '/includes/header.php';
     <p><strong>Database password:</strong> <?= DB_PASS ?></p>
     <p><strong>Upload dir:</strong> <?= UPLOAD_DIR ?></p>
     <p><strong>Secret:</strong> <?= APP_SECRET ?></p>
-    <p><strong>Recon flag:</strong> VSHOP{recon_debug_leak_2017}</p>
+    <p><strong>Recon flag:</strong> <?= htmlspecialchars(challenge_flags()['recon'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></p>
     <h2>Users</h2>
     <pre><?php print_r(db()->query('SELECT * FROM users')->fetchAll(PDO::FETCH_ASSOC)); ?></pre>
     <h2>Session</h2>

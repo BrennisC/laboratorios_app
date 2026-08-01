@@ -40,9 +40,12 @@ CREATE TABLE IF NOT EXISTS orders (
 CREATE TABLE IF NOT EXISTS flag_submissions (
     id SERIAL PRIMARY KEY,
     flag VARCHAR(255),
+    stage VARCHAR(50),
     correct BOOLEAN,
     submitted_at TIMESTAMP
 );
+
+ALTER TABLE flag_submissions ADD COLUMN IF NOT EXISTS stage VARCHAR(50);
 
 INSERT INTO users (id, name, email, password, role, credit_card, address) VALUES
     (1, 'Admin User', 'admin@example.com', 'admin123', 'admin', '4111111111111111', 'Admin Street 1'),

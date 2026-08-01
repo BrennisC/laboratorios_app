@@ -1,0 +1,3 @@
+files.internal status: degraded
+last health check: failed backup sync
+note: backup.internal still references old database recovery notes

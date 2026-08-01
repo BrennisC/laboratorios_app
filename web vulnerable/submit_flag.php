@@ -2,15 +2,16 @@
 require_once __DIR__ . '/db.php';
 
 $message = '';
-$flags = challenge_flags();
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $flag = trim($_POST['flag'] ?? '');
-    $correct = in_array($flag, $flags, true) ? 'true' : 'false';
+    $stage = flag_stage($flag);
+    $correct = $stage !== null ? 'true' : 'false';
     $safeFlag = str_replace("'", "''", $flag);
+    $safeStage = $stage === null ? 'NULL' : "'" . str_replace("'", "''", $stage) . "'";
 
-    db()->exec("INSERT INTO flag_submissions (flag, correct, submitted_at) VALUES ('$safeFlag', $correct, CURRENT_TIMESTAMP)");
-    $message = $correct ? 'Correct flag.' : 'Incorrect flag.';
+    db()->exec("INSERT INTO flag_submissions (flag, stage, correct, submitted_at) VALUES ('$safeFlag', $safeStage, $correct, CURRENT_TIMESTAMP)");
+    $message = $stage !== null ? 'Correct flag: ' . strtoupper($stage) . ' stage unlocked.' : 'Incorrect flag.';
 }
 
 $submissions = db()->query('SELECT * FROM flag_submissions ORDER BY id DESC LIMIT 20')->fetchAll(PDO::FETCH_ASSOC);
@@ -33,7 +34,7 @@ include __DIR__ . '/includes/header.php';
         <?php foreach ($submissions as $submission): ?>
             <tr>
                 <td><?= $submission['flag'] ?></td>
-                <td><?= $submission['correct'] ? 'Correct' : 'Wrong' ?></td>
+                <td><?= $submission['correct'] ? 'Correct' : 'Wrong' ?><?= $submission['stage'] ? ' · ' . htmlspecialchars($submission['stage'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') : '' ?></td>
                 <td><?= $submission['submitted_at'] ?></td>
             </tr>
         <?php endforeach; ?>

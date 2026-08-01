@@ -6,7 +6,7 @@ $output = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $xmlText = $_POST['xml'] ?? '';
 
-    // A4: XXE enabled deliberately.
+    // VULN: A05 - Injection. XXE enabled deliberately.
     libxml_disable_entity_loader(false);
     $dom = new DOMDocument();
     $dom->loadXML($xmlText, LIBXML_NOENT | LIBXML_DTDLOAD);

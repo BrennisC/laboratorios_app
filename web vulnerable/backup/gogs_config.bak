@@ -1,0 +1,16 @@
+[repository]
+ROOT = /srv/git/repositories
+
+[security]
+INSTALL_LOCK = true
+SECRET_KEY = dev-secret-left-in-repo
+
+[database]
+DB_TYPE = postgres
+HOST = 127.0.0.1:5432
+NAME = vulnshop_db
+USER = web_app
+PASSWD = secureshop_pass123
+
+[lab-note]
+Old code host components should be patched and isolated from public routes.

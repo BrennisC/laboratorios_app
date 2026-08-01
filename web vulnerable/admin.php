@@ -4,7 +4,7 @@ require_once __DIR__ . '/db.php';
 $message = '';
 $uploadedPath = '';
 
-// A5: broken access control. Role can be supplied by query string.
+// VULN: A01 - Broken Access Control. Role can be supplied by query string.
 $role = $_GET['role'] ?? current_user_role();
 
 if ($role !== 'admin') {
@@ -20,7 +20,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
     $targetName = basename($originalName);
     $targetPath = UPLOAD_DIR . '/' . $targetName;
 
-    // A5/A6: unrestricted upload into a web-accessible directory.
+    // VULN: A08 - Software or Data Integrity Failures. Unrestricted upload into a web-accessible directory.
     if ($targetName !== '' && move_uploaded_file($_FILES['file']['tmp_name'], $targetPath)) {
         $uploadedPath = '/uploads/' . $targetName;
         $message = 'File uploaded successfully.';
@@ -33,7 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_FILES['file'])) {
     $price = $_POST['price'] ?? '0';
     $image = $_POST['image'] ?? '';
 
-    // A1 and A7: SQL injection and stored XSS in product fields.
+    // VULN: A05 - Injection. SQL injection and stored XSS in product fields.
     db()->exec("INSERT INTO products (name, description, price, image, active) VALUES ('$name', '$description', $price, '$image', true)");
     $message = 'Product created';
 }
@@ -46,7 +46,7 @@ include __DIR__ . '/includes/header.php';
 <?php if ($message): ?><p class="notice"><?= $message ?></p><?php endif; ?>
 <?php if ($role === 'admin'): ?>
     <section class="notice">
-        <strong>Admin flag:</strong> VSHOP{admin_broken_access_2017}
+        <strong>Admin flag:</strong> <?= htmlspecialchars(challenge_flags()['admin'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?>
     </section>
 <?php endif; ?>
 <section class="panel">

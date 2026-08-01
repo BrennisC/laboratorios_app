@@ -1,0 +1,5 @@
+db.zip recovery note
+
+The exported archive was moved after the last incident.
+Temporary KeePass hint: developers reused weak passwords in the lab dataset.
+Check leaked application config before attempting authenticated areas.

@@ -5,7 +5,7 @@ if (!is_logged_in()) {
     redirect('/login.php');
 }
 
-// A5: IDOR, any authenticated user can request another user id.
+// VULN: A01 - Broken Access Control. Any authenticated user can request another user id.
 $id = $_GET['id'] ?? current_user_id();
 $user = db()->query("SELECT * FROM users WHERE id = $id")->fetch(PDO::FETCH_ASSOC);
 
@@ -22,7 +22,7 @@ include __DIR__ . '/includes/header.php';
         <p><strong>Credit card:</strong> <?= $user['credit_card'] ?></p>
         <p><strong>Address:</strong> <?= $user['address'] ?></p>
         <?php if ((int) $user['id'] === 2): ?>
-            <p><strong>User flag:</strong> VSHOP{user_idor_profile_2017}</p>
+            <p><strong>User flag:</strong> <?= htmlspecialchars(challenge_flags()['user'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></p>
         <?php endif; ?>
     </div>
 <?php endif; ?>

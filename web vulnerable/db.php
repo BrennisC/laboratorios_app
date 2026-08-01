@@ -55,21 +55,18 @@ function seed_database(PDO $pdo)
     $pdo->exec('CREATE TABLE IF NOT EXISTS flag_submissions (
         id SERIAL PRIMARY KEY,
         flag VARCHAR(255),
+        stage VARCHAR(50),
         correct BOOLEAN,
         submitted_at TIMESTAMP
     )');
+
+    $pdo->exec('ALTER TABLE flag_submissions ADD COLUMN IF NOT EXISTS stage VARCHAR(50)');
 
     if (!is_dir(__DIR__ . '/data')) {
         @mkdir(__DIR__ . '/data', 0777, true);
     }
 
-    if (!file_exists(__DIR__ . '/data/root_flag.txt') && is_dir(__DIR__ . '/data')) {
-        @file_put_contents(__DIR__ . '/data/root_flag.txt', "VSHOP{root_xxe_file_read_2017}\n");
-    }
-
-    if (!file_exists(__DIR__ . '/data/rce_flag.txt') && is_dir(__DIR__ . '/data')) {
-        @file_put_contents(__DIR__ . '/data/rce_flag.txt', "VSHOP{rce_command_execution_2017}\n");
-    }
+    ensure_lab_flags();
 
     $userCount = (int) $pdo->query('SELECT COUNT(*) FROM users')->fetchColumn();
     $productCount = (int) $pdo->query('SELECT COUNT(*) FROM products')->fetchColumn();
@@ -105,10 +102,84 @@ function seed_database(PDO $pdo)
 function challenge_flags()
 {
     return [
-        'recon' => 'VSHOP{recon_debug_leak_2017}',
-        'user' => 'VSHOP{user_idor_profile_2017}',
-        'admin' => 'VSHOP{admin_broken_access_2017}',
-        'root' => 'VSHOP{root_xxe_file_read_2017}',
-        'rce' => 'VSHOP{rce_command_execution_2017}',
+        'recon' => lab_flag('recon'),
+        'user' => lab_flag('user'),
+        'admin' => lab_flag('admin'),
+        'root' => lab_flag('root'),
+        'rce' => lab_flag('rce'),
     ];
+}
+
+function ensure_lab_flags()
+{
+    foreach (['recon', 'user', 'admin', 'root', 'rce'] as $stage) {
+        lab_flag($stage);
+    }
+
+    $rootPath = __DIR__ . '/data/root.txt';
+    $legacyRootPath = __DIR__ . '/data/root_flag.txt';
+    if (!file_exists($legacyRootPath) && file_exists($rootPath)) {
+        @copy($rootPath, $legacyRootPath);
+    }
+
+    $rcePath = __DIR__ . '/data/rce.txt';
+    $legacyRcePath = __DIR__ . '/data/rce_flag.txt';
+    if (!file_exists($legacyRcePath) && file_exists($rcePath)) {
+        @copy($rcePath, $legacyRcePath);
+    }
+}
+
+function lab_flag($stage)
+{
+    $paths = [
+        'recon' => __DIR__ . '/data/recon.txt',
+        'user' => __DIR__ . '/data/user.txt',
+        'admin' => __DIR__ . '/data/admin.txt',
+        'root' => __DIR__ . '/data/root.txt',
+        'rce' => __DIR__ . '/data/rce.txt',
+    ];
+
+    if (!isset($paths[$stage])) {
+        return '';
+    }
+
+    if (!is_dir(__DIR__ . '/data')) {
+        @mkdir(__DIR__ . '/data', 0777, true);
+    }
+
+    if (!file_exists($paths[$stage])) {
+        $uuid = lab_uuid();
+        @file_put_contents($paths[$stage], 'VSHOP{' . $stage . '_' . $uuid . '}' . "\n");
+    }
+
+    return trim((string) @file_get_contents($paths[$stage]));
+}
+
+function lab_uuid()
+{
+    $hex = bin2hex(random_bytes(16));
+    return sprintf('%s-%s-%s-%s-%s', substr($hex, 0, 8), substr($hex, 8, 4), substr($hex, 12, 4), substr($hex, 16, 4), substr($hex, 20));
+}
+
+function flag_stage($flag)
+{
+    foreach (challenge_flags() as $stage => $expected) {
+        if (hash_equals($expected, $flag)) {
+            return $stage;
+        }
+    }
+
+    return null;
+}
+
+function solved_stages()
+{
+    $solved = [];
+    $rows = db()->query('SELECT DISTINCT stage FROM flag_submissions WHERE correct = true AND stage IS NOT NULL')->fetchAll(PDO::FETCH_COLUMN);
+
+    foreach ($rows as $stage) {
+        $solved[$stage] = true;
+    }
+
+    return $solved;
 }

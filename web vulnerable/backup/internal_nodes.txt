@@ -1,0 +1,7 @@
+Internal node inventory
+
+files.internal - SecureShare portal
+git.internal - internal repository viewer
+backup.internal - legacy backup notes
+
+Finding: exposing internal hostnames helps attackers pivot through SSRF and misconfigured services.
