@@ -727,6 +727,49 @@ curl -X POST http://localhost:8000/api/submit-flag.php -d "flag=VSHOP{...}"
 9. Probar API insegura, JWT debil, SSTI y open redirect.
 10. Documentar impacto, evidencia y correccion.
 
+
+Las vulnerabilidades en SSH casi nunca son “SSH está roto”. Normalmente el problema está en cómo lo configurás. SSH bien configurado es muy seguro; SSH mal configurado es una puerta abierta.
+Vulnerabilidades comunes en SSH
+1. Contraseñas débiles
+Ejemplo:
+usuario: vulnerable
+contraseña: 123456
+Si permitís login por contraseña y usás claves obvias, un atacante puede intentar adivinarlas.
+2. Usuarios predecibles
+Nombres como:
+admin
+root
+test
+user
+vulnerable
+facilitan ataques porque el atacante ya tiene medio camino hecho: solo necesita probar contraseñas.
+3. Login de root habilitado
+Si root puede entrar por SSH, el atacante no necesita escalar privilegios después. Si acierta la contraseña o clave, ya entra como administrador.
+Configuración insegura:
+PermitRootLogin yes
+4. Autenticación por contraseña habilitada
+No es “malo” siempre, pero es más riesgoso que usar llaves SSH.
+Configuración más segura:
+PasswordAuthentication no
+5. Puerto expuesto públicamente
+El puerto 22 abierto a internet recibe intentos constantes. No porque cambiar el puerto sea seguridad real, sino porque reduce ruido automatizado.
+6. Versiones viejas de OpenSSH
+Si el servidor SSH está desactualizado, puede tener fallas conocidas. Por eso se actualiza el sistema y el paquete openssh-server.
+7. Permisos incorrectos en claves
+Si una clave privada queda accesible para otros usuarios o se sube por error a GitHub, cualquiera que la tenga puede entrar.
+8. Sin límites de intentos
+Si no usás herramientas como fail2ban, rate limiting o reglas de firewall, un atacante puede intentar muchas combinaciones durante mucho tiempo.
+En tu Docker vulnerable, la vulnerabilidad principal es esta:
+useradd -m vulnerable
+echo 'vulnerable:123456' | chpasswd
+PasswordAuthentication yes
+Eso crea un usuario conocido, con contraseña débil, y permite autenticación por contraseña. Para laboratorio está bien. Para producción, NO.
+Una configuración más segura sería:
+PermitRootLogin no
+PasswordAuthentication no
+PubkeyAuthentication yes
+La idea clave: SSH no es vulnerable por existir en el puerto 22; se vuelve vulnerable cuando lo exponés con malas credenciales, mala configuración o software desactualizado.
+
 ## Checklist de Reporte
 
 - [ ] Ruta afectada.
