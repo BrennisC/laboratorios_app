@@ -33,7 +33,45 @@ services:
       timeout: 5s
       retries: 10
 
+  secure_app:
+    build:
+      context: "./web seguro"
+    ports:
+      - "8080:80"
+      - "8443:443"
+    environment:
+      APP_ENV: docker-secure-v2
+      DB_HOST: secure_db
+      DB_PORT: "5432"
+      DB_NAME: secureshop_db
+      DB_USER: web_app
+      DB_PASS: secureshop_pass123
+      SESSION_SECURE: "true"
+    volumes:
+      - "./web seguro:/var/www/html"
+      - secureshop_uploads:/var/www/html/storage/uploads
+    depends_on:
+      secure_db:
+        condition: service_healthy
+
+  secure_db:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+    volumes:
+      - secure_postgres_data:/var/lib/postgresql/data
+      - "./web seguro/postgresql_setup.sql:/docker-entrypoint-initdb.d/01-secureshop.sql:ro"
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
 volumes:
   postgres_data:
   vulnshop_data:
   vulnshop_uploads:
+  secure_postgres_data:
+  secureshop_uploads:

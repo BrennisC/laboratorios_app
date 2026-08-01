@@ -1,94 +1,202 @@
-# SecureShop PHP - OWASP Top 10 2017 Defenses
+# SecureShop v2 - Guia de Desarrollo y Despliegue Seguro
 
-SecureShop is the safe counterpart to `web vulnerable`. It implements the same basic product-store idea with defensive coding practices.
+SecureShop v2 es la version sanitizada de `web vulnerable`. Mantiene el mismo contexto de tienda online, pero aplica controles defensivos y se despliega localmente con HTTPS/TLS mediante Docker y un certificado autofirmado generado con OpenSSL.
 
-## Requirements
+No es una aplicacion productiva real. Es una version segura para comparar contra la version vulnerable en un laboratorio local.
 
-- Ubuntu
-- PHP 8+
-- PostgreSQL 14+
-- PHP PostgreSQL extensions enabled: `pdo_pgsql` and `pgsql`
+## Ruta Rapida con Docker
 
-## PostgreSQL Configuration
-
-Default local lab values:
-
-- Database: `secureshop_db`
-- User: `web_app`
-- Password: `secureshop_pass123`
-- Host: `127.0.0.1`
-- Port: `5432`
-
-### Ubuntu
+Desde la raiz del repositorio:
 
 ```bash
-sudo apt update
-sudo apt install postgresql php php-pgsql
+docker compose up --build secure_app secure_db
 ```
 
-Create the database, user, tables and demo data:
+Abre:
+
+```text
+https://localhost:8443
+```
+
+El navegador mostrara una advertencia porque el certificado TLS es autofirmado. Para laboratorio local, acepta la excepcion manualmente.
+
+## Arquitectura de Despliegue
+
+```text
+Browser
+  |
+  | HTTPS 8443
+  v
+secure_app
+  PHP 8.2 + Apache + TLS
+  DocumentRoot: /var/www/html
+  |
+  | PostgreSQL internal network
+  v
+secure_db
+  PostgreSQL 16
+  Database: secureshop_db
+```
+
+Servicios Docker:
+
+| Servicio | Tecnologia | Puerto host | Proposito |
+| --- | --- | --- | --- |
+| `secure_app` | PHP 8.2 + Apache + OpenSSL | `8443:443`, `8080:80` | App segura v2 con HTTPS |
+| `secure_db` | PostgreSQL 16 | `5434:5432` | Base de datos aislada de SecureShop |
+
+El puerto `8080` redirige hacia `https://localhost:8443`.
+
+## Tecnologias Usadas
+
+| Tecnologia | Uso |
+| --- | --- |
+| PHP 8.2 | Backend web |
+| Apache HTTP Server | Servidor web y terminacion TLS |
+| OpenSSL | Generacion de certificado autofirmado |
+| PostgreSQL 16 | Persistencia de usuarios, productos, ordenes y logs |
+| Docker Compose | Orquestacion local de app + base de datos |
+| PDO PostgreSQL | Acceso seguro a base de datos con prepared statements |
+
+## Certificado SSL/TLS
+
+El certificado se genera durante el build del contenedor en `Dockerfile`:
 
 ```bash
-cd "web seguro"
-sudo -u postgres psql -f postgresql_setup.sql
+openssl req -x509 -nodes -days 365 -newkey rsa:2048 \
+  -keyout /etc/apache2/ssl/secureshop.key \
+  -out /etc/apache2/ssl/secureshop.crt \
+  -subj "/C=PE/ST=Local/L=Lab/O=SecureShop/OU=Training/CN=localhost" \
+  -addext "subjectAltName=DNS:localhost,IP:127.0.0.1"
 ```
 
-### Windows
+La configuracion Apache esta en:
 
-1. Install PostgreSQL from `https://www.postgresql.org/download/windows/`.
-2. Enable PostgreSQL extensions in `php.ini`:
-
-```ini
-extension=pdo_pgsql
-extension=pgsql
+```text
+web seguro/docker/apache-ssl.conf
 ```
 
-3. Restart IIS or your PHP process.
-4. Run the setup script from PowerShell:
+Controles TLS/HTTP aplicados:
 
-```powershell
-cd "C:\UNAS FIIS\PRACTICAS\webs_practica\web seguro"
-psql -U postgres -f .\postgresql_setup.sql
-```
+- HTTPS en puerto `8443`.
+- Redireccion HTTP `8080` hacia HTTPS.
+- `Strict-Transport-Security` cuando se usa HTTPS.
+- `X-Frame-Options: DENY`.
+- `X-Content-Type-Options: nosniff`.
+- `Referrer-Policy: strict-origin-when-cross-origin`.
+- `Content-Security-Policy` desde PHP.
+- Cookies de sesion con `Secure`, `HttpOnly` y `SameSite=Lax` en Docker.
 
-If `psql` is not recognized, add PostgreSQL's `bin` folder to `PATH`, for example `C:\Program Files\PostgreSQL\16\bin`.
+## Variables de Entorno
 
-## IIS On Windows
+`config.php` usa variables de entorno cuando existen y conserva defaults para ejecucion local sin Docker.
 
-1. Install IIS with CGI support: `Windows Features > Internet Information Services > World Wide Web Services > Application Development Features > CGI`.
-2. Install PHP for Windows and configure IIS FastCGI to use `php-cgi.exe`.
-3. Enable `pdo_pgsql` and `pgsql` in `php.ini`.
-4. Create an IIS site pointing to this folder: `web seguro`.
-5. Set the site port, for example `8080`, and open `http://localhost:8080`.
-
-The IIS application pool identity needs read access to the project folder.
-
-Run locally:
-
-```bash
-php -S 127.0.0.1:8080
-```
-
-Open: `http://127.0.0.1:8080`
-
-## Demo Accounts
-
-- Admin: `admin@secureshop.local` / `AdminPass123!`
-- User: `user@secureshop.local` / `UserPass123!`
-
-The SQL script inserts placeholder hashes for demo users. On first app load, PHP replaces them with real `password_hash()` values.
-
-## OWASP Top 10 2017 Defense Map
-
-| OWASP 2017 | Defense | Where |
+| Variable | Docker | Default local |
 | --- | --- | --- |
-| A1 Injection | Prepared statements and typed input validation | `lib/db.php`, all queries |
-| A2 Broken Authentication | `password_hash`, `password_verify`, session regeneration, login throttling | `login.php`, `lib/security.php` |
-| A3 Sensitive Data Exposure | No plaintext secrets in pages, masked cards, secure headers | `config.php`, `profile.php`, `includes/header.php` |
-| A4 XML External Entities | XML parser disables network/entity expansion | `import_xml.php` |
-| A5 Broken Access Control | Server-side role checks and object ownership checks | `admin.php`, `profile.php`, `orders.php` |
-| A6 Security Misconfiguration | Errors not displayed, no debug endpoint, restrictive headers | `config.php`, `includes/header.php` |
-| A7 Cross-Site Scripting | Output encoding with `e()` | `lib/security.php`, views |
-| A8 Insecure Deserialization | No `unserialize()` on user input; JSON allow-list parsing | `import_json.php` |
-| A9 Known Vulnerable Components | No old third-party JS dependency | `includes/header.php` |
-| A10 Insufficient Logging & Monitoring | Security events logged to DB | `lib/security.php`, `security_logs.php` |
+| `APP_ENV` | `docker-secure-v2` | `local` |
+| `DB_HOST` | `secure_db` | `127.0.0.1` |
+| `DB_PORT` | `5432` | `5432` |
+| `DB_NAME` | `secureshop_db` | `secureshop_db` |
+| `DB_USER` | `web_app` | `web_app` |
+| `DB_PASS` | `secureshop_pass123` | `secureshop_pass123` |
+| `SESSION_SECURE` | `true` | no definido |
+
+## Cuentas Demo
+
+| Rol | Email | Password |
+| --- | --- | --- |
+| Admin | `admin@secureshop.local` | `AdminPass123!` |
+| Usuario | `user@secureshop.local` | `UserPass123!` |
+
+El SQL inserta placeholders y la app los reemplaza con `password_hash()` en el primer acceso.
+
+## Controles de Seguridad Implementados
+
+| Area | Control aplicado | Archivos |
+| --- | --- | --- |
+| SQL Injection | Prepared statements y parametros tipados | `lib/db.php`, vistas con queries |
+| Autenticacion | `password_hash`, `password_verify`, regeneracion de sesion, throttling | `login.php` |
+| Autorizacion | `require_login`, `require_admin`, validacion de propiedad | `lib/security.php`, `profile.php`, `orders.php` |
+| CSRF | Token por formulario sensible | `lib/security.php`, formularios |
+| XSS | Escape centralizado con `e()` | `lib/security.php`, vistas |
+| Upload | Validacion de extension, MIME, tamano y almacenamiento fuera de ejecucion PHP | `upload.php`, `storage/uploads` |
+| RCE demo seguro | Comandos allowlist, sin input libre hacia shell | `rce.php` |
+| XML | Parser sin entidades externas ni red | `import_xml.php` |
+| JSON/import | Parsing allowlist, sin `unserialize()` | `import_json.php` |
+| Logging | Eventos de seguridad en BD | `lib/security.php`, `security_logs.php` |
+| TLS | HTTPS con certificado autofirmado local | `Dockerfile`, `docker/apache-ssl.conf` |
+
+## OWASP Top 10 2025 Defense Map
+
+| OWASP 2025 | Defensa | Donde |
+| --- | --- | --- |
+| A01 Broken Access Control | Checks server-side y propiedad de recursos | `lib/security.php`, `admin.php`, `profile.php`, `orders.php` |
+| A02 Security Misconfiguration | Errores ocultos, headers seguros, TLS y directorios sin indexing | `config.php`, `includes/header.php`, `docker/apache-ssl.conf` |
+| A03 Software Supply Chain Failures | Sin jQuery antiguo externo en la version segura | `includes/header.php` |
+| A04 Cryptographic Failures | Hash de passwords, tarjetas enmascaradas, HTTPS | `lib/db.php`, `profile.php`, Docker TLS |
+| A05 Injection | Prepared statements, validacion tipada, XML seguro | `login.php`, `search.php`, `product.php`, `import_xml.php` |
+| A06 Insecure Design | Flujos administrativos restringidos y comandos allowlist | `admin.php`, `rce.php`, `upload.php` |
+| A07 Identification and Authentication Failures | Rate limiting, session regeneration, cookies seguras | `login.php`, `config.php` |
+| A08 Software or Data Integrity Failures | Upload validado y sin deserializacion insegura | `upload.php`, `import_json.php` |
+| A09 Security Logging and Alerting Failures | Eventos de seguridad persistidos | `lib/security.php`, `security_logs.php` |
+| A10 Mishandling of Exceptional Conditions | Errores no expuestos al usuario | `config.php`, manejo de fallos |
+
+## Comandos Utiles
+
+Levantar solo la version segura:
+
+```bash
+docker compose up --build secure_app secure_db
+```
+
+Ver logs:
+
+```bash
+docker compose logs secure_app
+docker compose logs secure_db
+```
+
+Detener servicios:
+
+```bash
+docker compose down
+```
+
+Borrar volumenes y reiniciar base desde cero:
+
+```bash
+docker compose down -v
+docker compose up --build secure_app secure_db
+```
+
+Validar sintaxis PHP:
+
+```bash
+php -l config.php
+php -l login.php
+php -l upload.php
+```
+
+## Comparacion con Web Vulnerable
+
+| Tema | Web vulnerable | SecureShop v2 |
+| --- | --- | --- |
+| Transporte | HTTP | HTTPS con TLS local |
+| SQL | Concatenacion de strings | Prepared statements |
+| Passwords | Texto plano | `password_hash()` |
+| Sesion | Basica | Regeneracion, `HttpOnly`, `SameSite`, `Secure` en HTTPS |
+| Upload | Sin validacion suficiente | Extension, MIME, tamano y storage controlado |
+| Admin | Bypass por parametros | Rol validado server-side |
+| Logging | Ausente o narrativo | Eventos persistidos |
+| Errores | Verbosos | No expuestos al usuario |
+
+## Checklist de Entrega
+
+- [ ] `docker compose config` no muestra errores.
+- [ ] `https://localhost:8443` carga SecureShop v2.
+- [ ] El navegador muestra certificado TLS autofirmado.
+- [ ] Login admin funciona con `admin@secureshop.local` / `AdminPass123!`.
+- [ ] Login usuario funciona con `user@secureshop.local` / `UserPass123!`.
+- [ ] Upload seguro rechaza archivos no permitidos.
+- [ ] Security logs registran login, bloqueo y eventos administrativos.
+- [ ] La version vulnerable sigue disponible para comparacion si se levanta `app` + `db`.

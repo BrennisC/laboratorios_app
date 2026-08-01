@@ -4,6 +4,9 @@ header('X-Frame-Options: DENY');
 header('X-Content-Type-Options: nosniff');
 header('Referrer-Policy: strict-origin-when-cross-origin');
 header("Content-Security-Policy: default-src 'self'; img-src 'self' https://picsum.photos https://fastly.picsum.photos; style-src 'self'; script-src 'self'; base-uri 'self'; frame-ancestors 'none'");
+if ((($_SERVER['HTTPS'] ?? '') === 'on') || (getenv('SESSION_SECURE') === 'true')) {
+    header('Strict-Transport-Security: max-age=31536000; includeSubDomains');
+}
 ?>
 <!doctype html>
 <html lang="en">
