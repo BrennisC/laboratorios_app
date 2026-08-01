@@ -23,7 +23,7 @@ services:
     environment:
       POSTGRES_PASSWORD: postgres
     volumes:
-      - postgres_data:/var/lib/postgresql/data
+      - vulnshop_postgres_data:/var/lib/postgresql/data
       - "./web vulnerable/postgresql_setup.sql:/docker-entrypoint-initdb.d/01-vulnshop.sql:ro"
     ports:
       - "5433:5432"
@@ -70,7 +70,7 @@ services:
       retries: 10
 
 volumes:
-  postgres_data:
+  vulnshop_postgres_data:
   vulnshop_data:
   vulnshop_uploads:
   secure_postgres_data:

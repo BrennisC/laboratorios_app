@@ -1,6 +1,19 @@
-CREATE DATABASE vulnshop_db;
+DO $$
+BEGIN
+    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'web_app') THEN
+        CREATE ROLE web_app LOGIN PASSWORD 'secureshop_pass123';
+    END IF;
+END
+$$;
+
+CREATE DATABASE vulnshop_db OWNER web_app;
 
 \connect vulnshop_db
+
+ALTER SCHEMA public OWNER TO web_app;
+GRANT USAGE, CREATE ON SCHEMA public TO web_app;
+
+SET ROLE web_app;
 
 CREATE TABLE IF NOT EXISTS users (
     id SERIAL PRIMARY KEY,
@@ -166,16 +179,11 @@ SELECT setval(pg_get_serial_sequence('user_history', 'id'), COALESCE(MAX(id), 1)
 SELECT setval(pg_get_serial_sequence('reports', 'id'), COALESCE(MAX(id), 1)) FROM reports;
 SELECT setval(pg_get_serial_sequence('api_keys', 'id'), COALESCE(MAX(id), 1)) FROM api_keys;
 
-DO $$
-BEGIN
-    IF NOT EXISTS (SELECT FROM pg_roles WHERE rolname = 'web_app') THEN
-        CREATE ROLE web_app LOGIN PASSWORD 'secureshop_pass123';
-    END IF;
-END
-$$;
+RESET ROLE;
 
 GRANT ALL PRIVILEGES ON DATABASE vulnshop_db TO web_app;
+GRANT USAGE, CREATE ON SCHEMA public TO web_app;
 GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO web_app;
 GRANT ALL PRIVILEGES ON ALL SEQUENCES IN SCHEMA public TO web_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO web_app;
-ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO web_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE web_app IN SCHEMA public GRANT ALL PRIVILEGES ON TABLES TO web_app;
+ALTER DEFAULT PRIVILEGES FOR ROLE web_app IN SCHEMA public GRANT ALL PRIVILEGES ON SEQUENCES TO web_app;
