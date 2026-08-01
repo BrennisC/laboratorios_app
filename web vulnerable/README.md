@@ -184,8 +184,17 @@ Estas credenciales son intencionalmente debiles porque forman parte del laborato
 | `/checkout.php` | Registro de ordenes |
 | `/orders.php` | Ordenes del usuario |
 | `/login.php` | Inicio de sesion |
+| `/register.php` | Registro de usuarios |
+| `/forgot_password.php` | Recuperacion de password |
+| `/reset_password.php` | Cambio por token de recuperacion |
+| `/change_password.php` | Cambio de password autenticado |
 | `/profile.php?id=1` | Perfil de usuario |
 | `/admin.php` | Panel administrativo |
+| `/users.php` | CRUD de usuarios |
+| `/categories.php` | CRUD de categorias |
+| `/contact.php` | Formulario de contacto |
+| `/history.php` | Historial de usuario |
+| `/reports.php` | Reportes internos |
 
 ## Rutas de Practica Ocultas
 
@@ -206,6 +215,11 @@ Estas rutas no deben aparecer como parte principal de la tienda. Sirven para pra
 | `/hints.php` | Pistas progresivas |
 | `/status.php` | Progreso de flags enviadas |
 | `/submit_flag.php` | Envio web de flags |
+| `/api.php?resource=products` | API REST vulnerable |
+| `/jwt.php` | Emision de JWT debil para practica |
+| `/redirect.php?to=/index.php` | Redireccion abierta |
+| `/template.php` | Motor de plantillas inseguro tipo SSTI |
+| `/pollution.php?role=user&role=admin` | Parameter pollution |
 
 ## Flags Dinamicas
 
@@ -252,16 +266,16 @@ php -l db.php
 
 | OWASP 2025 | Vulnerabilidad | Donde |
 | --- | --- | --- |
-| A01 Broken Access Control | IDOR, parametros de rol confiados, acceso a ordenes y traversal | `profile.php`, `orders.php`, `admin.php`, `files.php` |
-| A02 Security Misconfiguration | Debug activo, nodos internos expuestos, rutas predecibles | `config.php`, `debug.php`, `nodes.php`, `repo.php` |
+| A01 Broken Access Control | IDOR, parametros de rol confiados, acceso a ordenes, traversal y CRUD sin autorizacion | `profile.php`, `orders.php`, `admin.php`, `files.php`, `users.php`, `history.php`, `reports.php`, `pollution.php` |
+| A02 Security Misconfiguration | Debug activo, CORS permisivo, nodos internos expuestos, rutas predecibles | `config.php`, `debug.php`, `nodes.php`, `repo.php`, `api.php` |
 | A03 Software Supply Chain Failures | Dependencia frontend antigua | `includes/header.php` |
-| A04 Cryptographic Failures | Passwords en texto plano y secretos filtrados | `db.php`, `debug.php`, `repo.php` |
-| A05 Injection | SQLi, XSS, XXE, SSRF-style URL injection y command injection | `login.php`, `search.php`, `product.php`, `admin.php`, `import_xml.php`, `healthcheck.php`, `rce.php` |
-| A06 Insecure Design | Flujos administrativos y de mantenimiento mal disenados | `admin.php`, `checkout.php`, `healthcheck.php` |
-| A07 Identification and Authentication Failures | Sin rate limiting, passwords debiles y sesion simple | `login.php`, `config.php` |
-| A08 Software or Data Integrity Failures | Deserializacion insegura y subida de archivos ejecutables | `deserialize.php`, `admin.php`, `uploads/` |
-| A09 Security Logging and Alerting Failures | Acciones criticas sin logging ni alertas reales | `login.php`, `admin.php`, `checkout.php`, `logs.php` |
-| A10 Mishandling of Exceptional Conditions | Errores verbosos y manejo debil de fallos | `config.php`, `debug.php`, `files.php`, `healthcheck.php` |
+| A04 Cryptographic Failures | Passwords en texto plano, JWT con secreto debil y secretos filtrados | `db.php`, `debug.php`, `repo.php`, `jwt.php` |
+| A05 Injection | SQLi, blind/boolean/time/UNION SQLi, XSS, XXE, SSRF-style URL injection, command injection, SSTI | `login.php`, `search.php`, `product.php`, `admin.php`, `import_xml.php`, `healthcheck.php`, `rce.php`, `template.php`, `api.php` |
+| A06 Insecure Design | Flujos administrativos, recuperacion, redirects y mantenimiento mal disenados | `admin.php`, `checkout.php`, `healthcheck.php`, `forgot_password.php`, `reset_password.php`, `redirect.php` |
+| A07 Identification and Authentication Failures | Sin rate limiting, passwords debiles, credenciales por defecto, sesion simple y tokens predecibles | `login.php`, `config.php`, `forgot_password.php`, `reset_password.php`, `change_password.php`, `jwt.php` |
+| A08 Software or Data Integrity Failures | Deserializacion insegura, subida ejecutable y mass assignment | `deserialize.php`, `admin.php`, `uploads/`, `register.php`, `users.php` |
+| A09 Security Logging and Alerting Failures | Acciones criticas sin logging ni alertas reales | `login.php`, `admin.php`, `checkout.php`, `logs.php`, `api.php` |
+| A10 Mishandling of Exceptional Conditions | Errores verbosos y manejo debil de fallos | `config.php`, `debug.php`, `files.php`, `healthcheck.php`, `api.php` |
 
 ## Checklist Antes de Compartir
 

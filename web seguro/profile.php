@@ -17,5 +17,7 @@ include __DIR__ . '/includes/header.php';
     <p><strong>Role:</strong> <?= e($user['role']) ?></p>
     <p><strong>Credit card:</strong> <?= e(mask_card($user['credit_card_last4'])) ?></p>
     <p><strong>Address:</strong> <?= e($user['address']) ?></p>
+
 </div>
+
 <?php include __DIR__ . '/includes/footer.php'; ?>

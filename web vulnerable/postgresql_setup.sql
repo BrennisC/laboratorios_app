@@ -14,12 +14,15 @@ CREATE TABLE IF NOT EXISTS users (
 
 CREATE TABLE IF NOT EXISTS products (
     id SERIAL PRIMARY KEY,
+    category_id INT,
     name VARCHAR(180),
     description TEXT,
     price DECIMAL(10,2),
     image TEXT,
     active BOOLEAN DEFAULT true
 );
+
+ALTER TABLE products ADD COLUMN IF NOT EXISTS category_id INT;
 
 CREATE TABLE IF NOT EXISTS reviews (
     id SERIAL PRIMARY KEY,
@@ -34,6 +37,69 @@ CREATE TABLE IF NOT EXISTS orders (
     user_id INT,
     total DECIMAL(10,2),
     address TEXT,
+    created_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS categories (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(120),
+    description TEXT
+);
+
+CREATE TABLE IF NOT EXISTS contacts (
+    id SERIAL PRIMARY KEY,
+    name VARCHAR(120),
+    email VARCHAR(190),
+    message TEXT,
+    created_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_history (
+    id SERIAL PRIMARY KEY,
+    user_id INT,
+    action TEXT,
+    ip_address VARCHAR(80),
+    created_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS reports (
+    id SERIAL PRIMARY KEY,
+    title VARCHAR(180),
+    content TEXT,
+    created_by INT,
+    created_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS password_resets (
+    id SERIAL PRIMARY KEY,
+    email VARCHAR(190),
+    token VARCHAR(255),
+    created_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS api_keys (
+    id SERIAL PRIMARY KEY,
+    user_id INT,
+    api_key VARCHAR(255),
+    scope VARCHAR(120),
+    created_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS user_sessions (
+    id SERIAL PRIMARY KEY,
+    user_id INT,
+    session_token VARCHAR(255),
+    ip_address VARCHAR(80),
+    user_agent TEXT,
+    created_at TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS api_events (
+    id SERIAL PRIMARY KEY,
+    endpoint VARCHAR(180),
+    method VARCHAR(20),
+    payload TEXT,
+    ip_address VARCHAR(80),
     created_at TIMESTAMP
 );
 
@@ -52,15 +118,15 @@ INSERT INTO users (id, name, email, password, role, credit_card, address) VALUES
     (2, 'Normal User', 'user@example.com', 'user123', 'user', '5555555555554444', 'User Avenue 99')
 ON CONFLICT (id) DO NOTHING;
 
-INSERT INTO products (id, name, description, price, image, active) VALUES
-    (1, 'Laptop Pro', 'High performance laptop for developers', 1200.00, 'https://picsum.photos/seed/laptop/500/300', true),
-    (2, 'Wireless Mouse', 'Ergonomic mouse with long battery life', 30.00, 'https://picsum.photos/seed/mouse/500/300', true),
-    (3, 'Mechanical Keyboard', 'RGB keyboard with blue switches', 90.00, 'https://picsum.photos/seed/keyboard/500/300', true),
-    (4, 'USB-C Hub', 'Seven-port hub for workstations', 55.00, 'https://picsum.photos/seed/hub/500/300', true),
-    (5, 'Smart Watch', 'Fitness tracking watch with insecure profile sync', 150.00, 'https://picsum.photos/seed/watch/500/300', true),
-    (6, 'Noise Cancelling Headphones', 'Wireless headphones for remote work', 180.00, 'https://picsum.photos/seed/headphones/500/300', true),
-    (7, 'Portable SSD 1TB', 'Fast storage for backups and lab files', 110.00, 'https://picsum.photos/seed/ssd/500/300', true),
-    (8, 'Webcam HD', 'USB webcam for meetings and streaming', 45.00, 'https://picsum.photos/seed/webcam/500/300', true)
+INSERT INTO products (id, category_id, name, description, price, image, active) VALUES
+    (1, 1, 'Laptop Pro', 'High performance laptop for developers', 1200.00, 'https://picsum.photos/seed/laptop/500/300', true),
+    (2, 2, 'Wireless Mouse', 'Ergonomic mouse with long battery life', 30.00, 'https://picsum.photos/seed/mouse/500/300', true),
+    (3, 2, 'Mechanical Keyboard', 'RGB keyboard with blue switches', 90.00, 'https://picsum.photos/seed/keyboard/500/300', true),
+    (4, 2, 'USB-C Hub', 'Seven-port hub for workstations', 55.00, 'https://picsum.photos/seed/hub/500/300', true),
+    (5, 2, 'Smart Watch', 'Fitness tracking watch with insecure profile sync', 150.00, 'https://picsum.photos/seed/watch/500/300', true),
+    (6, 2, 'Noise Cancelling Headphones', 'Wireless headphones for remote work', 180.00, 'https://picsum.photos/seed/headphones/500/300', true),
+    (7, 3, 'Portable SSD 1TB', 'Fast storage for backups and lab files', 110.00, 'https://picsum.photos/seed/ssd/500/300', true),
+    (8, 2, 'Webcam HD', 'USB webcam for meetings and streaming', 45.00, 'https://picsum.photos/seed/webcam/500/300', true)
 ON CONFLICT (id) DO NOTHING;
 
 INSERT INTO reviews (id, product_id, user_name, comment, created_at) VALUES
@@ -70,9 +136,35 @@ INSERT INTO reviews (id, product_id, user_name, comment, created_at) VALUES
     (4, 5, 'Dana', 'Good device, but the sync feature looks suspicious.', CURRENT_TIMESTAMP)
 ON CONFLICT (id) DO NOTHING;
 
+INSERT INTO categories (id, name, description) VALUES
+    (1, 'Computers', 'Laptops and workstations'),
+    (2, 'Accessories', 'Mice, keyboards and adapters'),
+    (3, 'Storage', 'Backup and portable storage devices')
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO user_history (id, user_id, action, ip_address, created_at) VALUES
+    (1, 1, 'Admin exported product report', '127.0.0.1', CURRENT_TIMESTAMP),
+    (2, 2, 'User updated shipping address', '127.0.0.1', CURRENT_TIMESTAMP),
+    (3, 2, 'User viewed order history', '127.0.0.1', CURRENT_TIMESTAMP)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO reports (id, title, content, created_by, created_at) VALUES
+    (1, 'Monthly Sales Draft', 'Pending review by back office.', 1, CURRENT_TIMESTAMP),
+    (2, 'Inventory Sync Notes', 'Some internal service checks are failing intermittently.', 1, CURRENT_TIMESTAMP)
+ON CONFLICT (id) DO NOTHING;
+
+INSERT INTO api_keys (id, user_id, api_key, scope, created_at) VALUES
+    (1, 1, 'adminkey-legacy-123', 'admin:*', CURRENT_TIMESTAMP),
+    (2, 2, 'userkey-public-456', 'user:read', CURRENT_TIMESTAMP)
+ON CONFLICT (id) DO NOTHING;
+
 SELECT setval(pg_get_serial_sequence('users', 'id'), COALESCE(MAX(id), 1)) FROM users;
 SELECT setval(pg_get_serial_sequence('products', 'id'), COALESCE(MAX(id), 1)) FROM products;
 SELECT setval(pg_get_serial_sequence('reviews', 'id'), COALESCE(MAX(id), 1)) FROM reviews;
+SELECT setval(pg_get_serial_sequence('categories', 'id'), COALESCE(MAX(id), 1)) FROM categories;
+SELECT setval(pg_get_serial_sequence('user_history', 'id'), COALESCE(MAX(id), 1)) FROM user_history;
+SELECT setval(pg_get_serial_sequence('reports', 'id'), COALESCE(MAX(id), 1)) FROM reports;
+SELECT setval(pg_get_serial_sequence('api_keys', 'id'), COALESCE(MAX(id), 1)) FROM api_keys;
 
 DO $$
 BEGIN

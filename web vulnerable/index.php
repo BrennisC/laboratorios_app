@@ -11,7 +11,7 @@ $products = db()->query('SELECT * FROM products WHERE active = true ORDER BY id 
         <p>Find laptops, accessories, storage and office devices selected for students, developers and small teams.</p>
         <div class="hero-actions">
             <a class="button" href="/search.php">Shop Products</a>
-            <a class="button secondary" href="/cart.php">View Cart</a>
+            <a class="button secondary" href="/reports.php">View Reports</a>
         </div>
     </div>
     <aside class="promo-card">

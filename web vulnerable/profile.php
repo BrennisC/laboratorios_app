@@ -25,5 +25,12 @@ include __DIR__ . '/includes/header.php';
             <p><strong>User flag:</strong> <?= htmlspecialchars(challenge_flags()['user'], ENT_QUOTES | ENT_SUBSTITUTE, 'UTF-8') ?></p>
         <?php endif; ?>
     </div>
+    <section class="panel">
+        <h2>Account Actions</h2>
+        <p>
+            <a class="button secondary" href="/forgot_password.php">Recover password</a>
+            <a class="button" href="/change_password.php">Change password</a>
+        </p>
+    </section>
 <?php endif; ?>
 <?php include __DIR__ . '/includes/footer.php'; ?>
