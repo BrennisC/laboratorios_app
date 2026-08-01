@@ -13,6 +13,8 @@ class FileWriter
 }
 
 $result = '';
+$writtenFile = __DIR__ . '/uploads/pwned.txt';
+$writtenFileUrl = '/uploads/pwned.txt';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $payload = $_POST['payload'] ?? '';
@@ -24,6 +26,7 @@ include __DIR__ . '/includes/header.php';
 ?>
 <h1>Deserialize Tool</h1>
 <div class="panel">
+    <p>This lab intentionally unserializes user-controlled PHP objects. The sample payload abuses the <code>FileWriter</code> destructor to write a file under <code>uploads/</code>.</p>
     <form method="post">
         <label>Serialized payload</label>
         <textarea name="payload" rows="6">O:10:"FileWriter":2:{s:4:"path";s:19:"uploads/pwned.txt";s:7:"content";s:17:"deserialized data";}</textarea>
@@ -31,6 +34,10 @@ include __DIR__ . '/includes/header.php';
     </form>
     <?php if ($result): ?>
         <pre><?= $result ?></pre>
+    <?php endif; ?>
+    <?php if (is_file($writtenFile)): ?>
+        <p>Written file: <a href="<?= $writtenFileUrl ?>"><?= $writtenFileUrl ?></a></p>
+        <pre><?= htmlspecialchars(file_get_contents($writtenFile), ENT_QUOTES, 'UTF-8') ?></pre>
     <?php endif; ?>
 </div>
 <?php include __DIR__ . '/includes/footer.php'; ?>

@@ -669,6 +669,24 @@ Payload de ejemplo incluido en el formulario:
 O:10:"FileWriter":2:{s:4:"path";s:19:"uploads/pwned.txt";s:7:"content";s:17:"deserialized data";}
 ```
 
+Resultado esperado:
+
+```text
+El objeto FileWriter se deserializa y su metodo __destruct() escribe uploads/pwned.txt con el contenido deserialized data.
+```
+
+Verificacion:
+
+```text
+http://localhost:8000/uploads/pwned.txt
+```
+
+Raiz del problema:
+
+```text
+La ruta recibe datos serializados controlados por el usuario y ejecuta unserialize() sin allowed_classes.
+```
+
 ## Exposicion de Endpoints y API Insegura
 
 Rutas:
