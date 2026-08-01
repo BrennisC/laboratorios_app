@@ -1,4 +1,12 @@
 services:
+  vulnerable-ssh:
+    build:
+      context: "./vulnerable-ssh"
+    image: vulnerable-ssh
+    container_name: vulnerable-ssh
+    ports:
+      - "127.0.0.1:2222:22"
+
   app:
     build:
       context: "./web vulnerable"
